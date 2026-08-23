@@ -152,9 +152,35 @@
     border:1px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:20px;font-size:12.5px;
     box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:.25s;pointer-events:none;z-index:50;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+      /* ---------- ระบบแท็บวิชา ---------- */
+  .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
+  .tab{flex:1;min-width:80px;background:var(--card-in);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:10px 5px;cursor:pointer;font-weight:600;font-size:12px;}
+  .tab.active{background:var(--amber);color:#1a1400;border-color:var(--amber);}
+  
+  /* ---------- ปุ่มเปิด Flashcards / Mock Test ---------- */
+  .tool-btns{display:flex;gap:8px;margin-bottom:12px;}
+  .tool-btn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;padding:10px 5px;cursor:pointer;}
+    
 </style>
 </head>
 <body>
+
+  <!-- เมนูเลือกวิชา -->
+  <div class="tabs" id="subjectTabs">
+    <button class="tab active" onclick="switchSubject('math')">📐 คณิต</button>
+    <button class="tab" onclick="switchSubject('thai')">📖 ไทย</button>
+    <button class="tab" onclick="switchSubject('eng')">🔤 อังกฤษ</button>
+    <button class="tab" onclick="switchSubject('law')">⚖️ กฎหมาย</button>
+    <button class="tab" onclick="switchSubject('social')">🌏 สังคม</button>
+  </div>
+
+  <!-- ปุ่มโหมดติวเข้มข้น -->
+  <div class="tool-btns">
+    <button class="tool-btn" onclick="startFlashcards()">🎴 ท่องศัพท์ (Flashcards)</button>
+    <button class="tool-btn" onclick="startExam()">📝 ติวเข้ม (Mock Test)</button>
+  </div>
+  
 <div class="wrap">
   <header>
     <div class="eyebrow">MATH · FROM ZERO</div>
@@ -1342,6 +1368,145 @@ function loadProgress(){
   try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
 }
 function saveProgress(p){ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+  /* ============== ระบบจัดการหลายวิชา ============== */
+const OTHER_TOPICS = {
+    thai: [{ id:'thai1', title:'หลักภาษาไทย', sub:'ไวยากรณ์พื้นฐาน', explain:['ภาษาไทยมีโครงสร้าง...'], practice:[{q:'คำว่า "กา" เป็นคำชนิดใด', a:'นาม'}] }],
+    eng: [{ id:'eng1', title:'12 Tenses', sub:'โครงสร้างประโยค', explain:['Present Simple ใช้กับปัจจุบัน...'], practice:[{q:'She ___ (go) to school.', a:'goes'}] }],
+    law: [{ id:'law1', title:'กฎหมายอาญา', sub:'มาตรา 288', track:'ปราบปราม', explain:['การฆ่าคนตายโดยเจตนา...'], practice:[{q:'มาตรา 288 คือความผิดฐานใด', a:'ฆ่าคนตาย'}] }, 
+          { id:'law2', title:'กฎหมายปกครอง', sub:'นิติกรรมทางปกครอง', track:'อำนวยการ', explain:['องค์กร...'], practice:[{q:'นิติกรรมทางปกครองคือ', a:'คำสั่งทางปกครอง'}] }],
+    social: [{ id:'social1', title:'ประวัติศาสตร์', sub:'ยุคสุโขทัย', explain:['พ่อขุนรามคำแหง...'], practice:[{q:'สร้างสุโขทัยปีใด', a:1238}] }]
+};
+
+let currentSubject = 'math';
+function getCurrentTopics(){
+    if(currentSubject === 'math') return TOPICS;
+    return OTHER_TOPICS[currentSubject] || [];
+}
+function switchSubject(sub){
+    currentSubject = sub;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    renderRoadmap();
+}
+
+/* แก้ไขฟังก์ชันเดิมให้ใช้ getCurrentTopics() */
+function renderRoadmap(){
+  let html = '';
+  let lastSection = null;
+  const topics = getCurrentTopics(); // เปลี่ยนจาก TOPICS เป็น getCurrentTopics()
+  topics.forEach((t,i)=>{
+    if(t.section && t.section !== lastSection){
+      html += `<div class="section-label">
+        <div class="sl-icon">🚓</div>
+        <div>
+          <div class="sl-text">${t.section}</div>
+          <div class="sl-sub">ใช้ติวได้ทั้งสายอำนวยการและสายปราบปราม (เนื้อหาข้อสอบเหมือนกัน)</div>
+        </div>
+      </div>`;
+      lastSection = t.section;
+    }
+    const isDone = !!progress[t.id];
+    const policeClass = t.section ? ' police' : '';
+    html += `<div class="node${isDone?' done':''}${policeClass}" data-idx="${i}">
+      <div class="dot"><span>${i+1}</span></div>
+      <div class="card">
+        <div class="ntitle">${t.title}</div>
+        <div class="nsub">${t.sub}</div>
+        <span class="ntag">${t.tag || t.track || 'ทั่วไป'}</span>
+      </div>
+    </div>`;
+  });
+  $('rmapList').innerHTML = html;
+  document.querySelectorAll('.node').forEach(n=>{
+    n.addEventListener('click', ()=> openLesson(parseInt(n.dataset.idx)));
+  });
+  updateProgressBar();
+}
+
+/* แก้ openLesson ให้ใช้ getCurrentTopics() ด้วย */
+function openLesson(idx){
+  const topics = getCurrentTopics();
+  const t = topics[idx];
+  currentIdx = idx;
+  // ... (ส่วนที่เหลือเดิมเหมือนเดิม แต่เปลี่ยนจาก TOPICS[idx] เป็น t)
+  
+  $('lTag').textContent = t.tag || 'บทเรียน';
+  $('lTitle').textContent = t.title;
+  $('lSub').textContent = t.sub;
+  $('lExplain').innerHTML = t.explain.map(e=>`<li>${e}</li>`).join('');
+  // ... (วางโค้ดที่เหลือของ openLesson เดิมตรงนี้)
+  
+  const isDone = !!progress[t.id];
+  const doneBtn = $('doneBtn');
+  doneBtn.textContent = isDone ? '✓ เรียนจบบทนี้แล้ว' : '✓ ทำเครื่องหมายว่าเรียนจบบทนี้';
+  doneBtn.classList.toggle('isdone', isDone);
+
+  $('prevBtn').disabled = idx===0;
+  $('nextBtn').disabled = idx===topics.length-1;
+
+  $('roadmap').classList.remove('active');
+  $('lesson').classList.add('active');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ระบบ Flashcards (ท่องศัพท์) */
+function startFlashcards() {
+    let cards = [];
+    getCurrentTopics().forEach(t => cards.push({front: t.title, back: t.sub || t.explain[0]}));
+    if(cards.length === 0) cards = [{front:'ยังไม่มีเนื้อหา', back:'เพิ่มเนื้อหาในโค้ด'}];
+    let idx = 0;
+    alert('การ์ด 1/' + cards.length + ': ' + cards[0].front + '\n\n(กด OK เพื่อดูเฉลย)');
+    if(confirm('ต้องการดูคำตอบไหม?')) {
+        alert(cards[0].back);
+    }
+}
+
+/* ระบบ Mock Test (ข้อสอบจำลองจับเวลา) */
+function startExam() {
+    const qs = [];
+    getCurrentTopics().forEach(t => t.practice.forEach(p => qs.push(p)));
+    if(qs.length === 0) { alert('ยังไม่มีข้อสอบในวิชานี้'); return; }
+    
+    let score = 0;
+    for(let i = 0; i < qs.length; i++) {
+        const ans = prompt(`ข้อ ${i+1}/${qs.length}: ${qs[i].q}`);
+        if(String(ans).trim().toLowerCase() === String(qs[i].a).toLowerCase()) score++;
+    }
+    alert(`ได้คะแนน ${score} / ${qs.length} คะแนน (${Math.round(score/qs.length*100)}%)`);
+}
+
+/* ปิดท้ายด้วยการเรียกใช้ฟังก์ชันเริ่มต้น */
+renderTabs(); // (ถ้ามี)
+
+/* ระบบ Flashcards (ท่องศัพท์) */
+function startFlashcards() {
+    let cards = [];
+    getCurrentTopics().forEach(t => cards.push({front: t.title, back: t.sub || t.explain[0]}));
+    if(cards.length === 0) cards = [{front:'ยังไม่มีเนื้อหา', back:'เพิ่มเนื้อหาในโค้ด'}];
+    let idx = 0;
+    alert('การ์ด 1/' + cards.length + ': ' + cards[0].front + '\n\n(กด OK เพื่อดูเฉลย)');
+    if(confirm('ต้องการดูคำตอบไหม?')) {
+        alert(cards[0].back);
+    }
+}
+
+/* ระบบ Mock Test (ข้อสอบจำลองจับเวลา) */
+function startExam() {
+    const qs = [];
+    getCurrentTopics().forEach(t => t.practice.forEach(p => qs.push(p)));
+    if(qs.length === 0) { alert('ยังไม่มีข้อสอบในวิชานี้'); return; }
+    
+    let score = 0;
+    for(let i = 0; i < qs.length; i++) {
+        const ans = prompt(`ข้อ ${i+1}/${qs.length}: ${qs[i].q}`);
+        if(String(ans).trim().toLowerCase() === String(qs[i].a).toLowerCase()) score++;
+    }
+    alert(`ได้คะแนน ${score} / ${qs.length} คะแนน (${Math.round(score/qs.length*100)}%)`);
+}
+  
+renderRoadmap();
+  
 let progress = loadProgress();
 let currentIdx = 0;
 
