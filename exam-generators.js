@@ -80,11 +80,23 @@ function gen_ratio() {
 }
 
 // ---------- 4. ค่าเฉลี่ย ----------
-function gen_average() {
+function gen_average(depth) {
+  depth = depth || 0;
   const avg = randInt(20, 90);
   const d1 = randInt(-15, 15), d2 = randInt(-15, 15);
   const a = avg + d1, b = avg + d2, c = 3 * avg - a - b;
-  if (c < 1) return gen_average();
+  // กัน stack overflow: ถ้าสุ่มไม่ผ่านเงื่อนไขติดกันหลายครั้ง ให้บังคับใช้ค่าที่การันตีว่า c>=1 แทนการเรียกซ้ำไม่จำกัด
+  if (c < 1) {
+    if (depth < 20) return gen_average(depth + 1);
+    const a2 = avg, b2 = avg, c2 = avg; // fallback ปลอดภัย: ทั้งสามเดือนเท่ากับค่าเฉลี่ยพอดี
+    const { choices, correct } = makeChoices(avg, [avg + 5, avg - 5, avg + 3],
+      v => `${fmtNum(v)} เรื่อง`);
+    return {
+      q: `สถิติรับเรื่องร้องเรียน เดือนที่ 1 มี ${a2} เรื่อง เดือนที่ 2 มี ${b2} เรื่อง เดือนที่ 3 มี ${c2} เรื่อง เฉลี่ยเดือนละกี่เรื่อง`,
+      choices, correct,
+      explain: `(${a2}+${b2}+${c2})÷3 = ${a2 + b2 + c2}÷3 = ${avg} เรื่อง`
+    };
+  }
   const { choices, correct } = makeChoices(avg, [avg + 5, avg - 5, Math.round((a + b) / 2)],
     v => `${fmtNum(v)} เรื่อง`);
   return {

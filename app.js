@@ -73,6 +73,10 @@ const TRANSLATIONS = {
   fcPrev:           { en:'Previous', zh:'上一个', ja:'前へ' },
   fcFlip:           { en:'Flip Card', zh:'翻转卡片', ja:'カードを裏返す' },
   fcNext:           { en:'Next', zh:'下一个', ja:'次へ' },
+  dataBackupLabel:  { en:'Backup / Restore Data (progress, exam scores, exam date)', zh:'备份/恢复数据（学习进度、考试成绩、考试日期）', ja:'データのバックアップ／復元（進捗・試験結果・試験日）' },
+  dataExportBtn:    { en:'Export Backup File', zh:'导出备份文件', ja:'バックアップを書き出す' },
+  dataImportBtn:    { en:'Import Backup File', zh:'导入备份文件', ja:'バックアップを読み込む' },
+  dataBackupMsg:    { en:'All data is stored only in this browser\'s Local Storage. Clearing your cache or switching devices/browsers will erase it unless you back it up first. We recommend exporting a backup periodically.', zh:'所有数据仅保存在本浏览器的 Local Storage 中。清除缓存或更换设备/浏览器将导致数据丢失，请提前导出备份。建议定期导出备份。', ja:'すべてのデータはこのブラウザのLocal Storageにのみ保存されています。キャッシュを消去したり端末・ブラウザを変更すると、事前にバックアップしない限りデータは消えます。定期的にバックアップの書き出しをおすすめします。' },
 };
 // เก็บข้อความไทยต้นฉบับไว้ก่อน เพื่อใช้สลับกลับตอนเลือก "TH"
 const THAI_ORIGINALS = {};
@@ -246,7 +250,7 @@ function renderExamScreen(track, questions){
     <div class="examq">
       <div class="eqhead"><span class="eqnum">ข้อที่ ${i+1}</span><span class="eqcat">${q.cat || ''}</span></div>
       <div class="eqtext">${q.q}</div>
-      ${q.choices.map((c,ci)=>`<button class="echoice" data-eqi="${i}" data-eci="${ci}">${c}</button>`).join('')}
+      ${q.choices.map((c,ci)=>`<button class="echoice" data-eqi="${i}" data-eci="${ci}"><span class="etext">${c}</span><span class="eicon ic-correct">✓</span><span class="eicon ic-wrong">✗</span></button>`).join('')}
       <div class="eexplain" data-eexplain="${i}">${q.explain}</div>
     </div>
   `).join('');
@@ -807,6 +811,65 @@ function renderDashboard(){
   renderDashLessonProgress();
   renderDashExamAccuracy();
 }
+
+/* ============== สำรอง/กู้คืนข้อมูล (Export / Import) ==============
+   รวมข้อมูลทั้งหมดที่ผู้ใช้สะสมไว้ (ความคืบหน้าบทเรียน, คะแนนสอบ, สายที่เลือก, วันสอบ,
+   และค่ากำหนดหน้าจอ) เป็นไฟล์ JSON เดียว ให้ดาวน์โหลดเก็บไว้ แล้วนำกลับมาใช้ในเครื่อง/เบราว์เซอร์อื่นได้
+   ทำงานฝั่ง client ล้วนๆ ไม่มีการส่งข้อมูลออกไปที่ไหนทั้งสิ้น */
+const BACKUP_KEYS = [
+  STORAGE_KEY, EXAM_RESULT_KEY, EXAM_DATE_KEY, TRACK_KEY,
+  THEME_KEY, BRIGHT_KEY, LANG_KEY
+];
+function exportBackup(){
+  const payload = { app:'ติวสอบตำรวจ & คณิตศาสตร์', exportedAt: new Date().toISOString(), data:{} };
+  BACKUP_KEYS.forEach(k=>{
+    const v = localStorage.getItem(k);
+    if(v !== null) payload.data[k] = v;
+  });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `police-math-prep-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('ส่งออกไฟล์สำรองแล้ว ⬇️');
+}
+function importBackup(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const payload = JSON.parse(reader.result);
+      const data = payload && payload.data;
+      if(!data || typeof data !== 'object') throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+      // นำเข้าเฉพาะคีย์ที่แอปรู้จักเท่านั้น ป้องกันไฟล์แปลกปลอมเขียนทับ localStorage คีย์อื่น
+      let restored = 0;
+      BACKUP_KEYS.forEach(k=>{
+        if(Object.prototype.hasOwnProperty.call(data, k)){
+          localStorage.setItem(k, data[k]);
+          restored++;
+        }
+      });
+      if(restored === 0){ showToast('ไม่พบข้อมูลที่นำเข้าได้ในไฟล์นี้'); return; }
+      showToast('นำเข้าข้อมูลสำเร็จ กำลังโหลดหน้าใหม่... ✅');
+      setTimeout(()=> window.location.reload(), 900);
+    } catch(e){
+      showToast('ไฟล์นี้ใช้ไม่ได้ กรุณาเลือกไฟล์สำรองที่ส่งออกจากแอปนี้');
+    }
+  };
+  reader.onerror = () => showToast('อ่านไฟล์ไม่สำเร็จ');
+  reader.readAsText(file);
+}
+if($('dataExportBtn')) $('dataExportBtn').addEventListener('click', exportBackup);
+if($('dataImportBtn')) $('dataImportBtn').addEventListener('click', ()=> $('dataImportInput').click());
+if($('dataImportInput')) $('dataImportInput').addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(file) importBackup(file);
+  e.target.value = '';
+});
 
 renderRoadmap();
 

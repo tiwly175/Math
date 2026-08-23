@@ -112,11 +112,15 @@
   .examq .eqcat{font-size:10px;font-weight:600;color:var(--blue);background:rgba(111,173,224,.12);border:1px solid rgba(111,173,224,.35);
     border-radius:20px;padding:2px 9px;white-space:nowrap;}
   .examq .eqtext{font-size:13.5px;font-weight:500;margin-bottom:11px;line-height:1.55;}
-  .echoice{display:block;width:100%;text-align:left;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
+  .echoice{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
     border-radius:10px;font-family:inherit;font-size:13px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
   .echoice:last-child{margin-bottom:0;}
   .echoice.correct{background:rgba(102,181,134,.15);border-color:var(--green);color:var(--green);font-weight:600;}
   .echoice.wrong{background:rgba(241,106,68,.15);border-color:var(--red);color:var(--red);}
+  /* ไอคอน ✓/✗ ประกอบสี ไม่ให้ผู้ใช้ที่แยกสีลำบากต้องพึ่งสีอย่างเดียว */
+  .echoice .eicon{flex-shrink:0;font-weight:700;font-size:13px;display:none;}
+  .echoice.correct .eicon.ic-correct{display:inline;color:var(--green);}
+  .echoice.wrong .eicon.ic-wrong{display:inline;color:var(--red);}
   .eexplain{margin-top:11px;font-size:12.5px;line-height:1.6;color:var(--muted);padding-top:10px;
     border-top:1px dashed var(--line);display:none;}
   .eexplain.show{display:block;}
@@ -399,6 +403,16 @@
       <li>ไม่มีระบบส่งข้อมูลไปยังเซิร์ฟเวอร์ใดๆ ทั้งสิ้น (ดูได้จาก Source Code ว่าไม่มีคำสั่ง <code>fetch</code> หรือ <code>XMLHttpRequest</code>)</li>
       <li>เปิดได้ทุกเบราว์เซอร์ ไม่ต้องติดตั้งซอฟต์แวร์เพิ่ม</li>
     </ul>
+  </div>
+
+  <div class="databox">
+    <div class="tlabel">💾 <span data-i18n="dataBackupLabel">สำรอง/กู้คืนข้อมูล (ความคืบหน้า, คะแนนสอบ, วันสอบ)</span></div>
+    <div class="databtns">
+      <button class="databtn" id="dataExportBtn">⬇️ <span data-i18n="dataExportBtn">ส่งออกไฟล์สำรอง</span></button>
+      <button class="databtn" id="dataImportBtn">⬆️ <span data-i18n="dataImportBtn">นำเข้าไฟล์สำรอง</span></button>
+    </div>
+    <input type="file" id="dataImportInput" accept="application/json" style="display:none;">
+    <div class="datamsg" data-i18n="dataBackupMsg">ข้อมูลทั้งหมดเก็บอยู่ใน Local Storage ของเบราว์เซอร์นี้เท่านั้น หากล้างแคชหรือเปลี่ยนเครื่อง/เบราว์เซอร์ ข้อมูลจะหายถ้าไม่ได้สำรองไว้ก่อน แนะนำให้กด "ส่งออกไฟล์สำรอง" เก็บไว้เป็นระยะ</div>
   </div>
 
   <div class="trackwrap">
