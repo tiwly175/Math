@@ -47,6 +47,8 @@ const TRANSLATIONS = {
   tabEng:           { en:'English', zh:'英语', ja:'英語' },
   tabLaw:           { en:'Law', zh:'法律', ja:'法律' },
   tabSocial:        { en:'Social', zh:'社会', ja:'社会' },
+  tabComputer:      { en:'Computer', zh:'计算机', ja:'コンピュータ' },
+  tabPoliceBasic:   { en:'Police Basics', zh:'警务基础', ja:'警察基礎知識' },
   toolFlash:        { en:'Review Lessons (Flashcards)', zh:'复习课程（速记卡）', ja:'レッスン復習（フラッシュカード）' },
   toolFitness:      { en:'Fitness Training', zh:'体能训练', ja:'体力トレーニング' },
   toolDashboard:    { en:'Summary / Countdown', zh:'总结/倒计时', ja:'サマリー／カウントダウン' },
