@@ -77,6 +77,9 @@ const TRANSLATIONS = {
   dataExportBtn:    { en:'Export Backup File', zh:'导出备份文件', ja:'バックアップを書き出す' },
   dataImportBtn:    { en:'Import Backup File', zh:'导入备份文件', ja:'バックアップを読み込む' },
   dataBackupMsg:    { en:'All data is stored only in this browser\'s Local Storage. Clearing your cache or switching devices/browsers will erase it unless you back it up first. We recommend exporting a backup periodically.', zh:'所有数据仅保存在本浏览器的 Local Storage 中。清除缓存或更换设备/浏览器将导致数据丢失，请提前导出备份。建议定期导出备份。', ja:'すべてのデータはこのブラウザのLocal Storageにのみ保存されています。キャッシュを消去したり端末・ブラウザを変更すると、事前にバックアップしない限りデータは消えます。定期的にバックアップの書き出しをおすすめします。' },
+  toolVocab:        { en:'Vocab Matching Game', zh:'词汇配对游戏', ja:'単語マッチングゲーム' },
+  vocabH2:          { en:'EN-TH Vocab Matching Game', zh:'英泰词汇配对游戏', ja:'英タイ単語マッチングゲーム' },
+  vocabP:           { en:'Common government-exam and police-specific terms — match them all as fast as you can', zh:'常见于公务员考试及警务专用词汇 — 尽快全部配对完成', ja:'公務員試験や警察専門用語 — できるだけ速くすべてマッチさせよう' },
 };
 // เก็บข้อความไทยต้นฉบับไว้ก่อน เพื่อใช้สลับกลับตอนเลือก "TH"
 const THAI_ORIGINALS = {};
@@ -261,6 +264,8 @@ function renderExamScreen(track, questions){
       if(examAnswers[qi] !== undefined) return;
       examAnswers[qi] = ci;
       const q = qs[qi];
+      logActivity(1);
+      logCatAnswer(currentExamTrack, q.cat || MATH_CAT, ci === q.correct);
       document.querySelectorAll(`.echoice[data-eqi="${qi}"]`).forEach(b=>{
         const bci = parseInt(b.dataset.eci);
         if(bci === q.correct) b.classList.add('correct');
@@ -353,14 +358,19 @@ if($('examDurChips')){
   });
 }
 
-function openExamScreen(track){
-  currentExamCats = getAvailableCats(track);
+function openExamScreen(track, presetCats){
+  const avail = getAvailableCats(track);
+  currentExamCats = (presetCats && presetCats.length) ? presetCats.filter(c=>avail.includes(c)) : avail;
+  if(currentExamCats.length === 0) currentExamCats = avail;
   renderCatFilterChips(track);
   renderExamScreen(track, buildExamQuestions(track, getExamCount(), currentExamCats));
   updateExamTimeHint();
   resetExamTimerUI();
   $('roadmap').classList.remove('active');
   $('lesson').classList.remove('active');
+  $('dashboardscreen').classList.remove('active');
+  $('fitnessscreen').classList.remove('active');
+  if($('vocabScreen')) $('vocabScreen').classList.remove('active');
   $('examscreen').classList.add('active');
   window.scrollTo({top:0, behavior:'instant'});
 }
@@ -551,6 +561,7 @@ function openLesson(idx){
       if(!result.ok && result.invalidNumber){
         fb.className='q-fb no'; fb.textContent='พิมพ์คำตอบเป็นตัวเลขก่อนนะ'; return;
       }
+      logActivity(1);
       if(result.ok){
         fb.className='q-fb ok'; fb.textContent='ถูกต้อง! 🎉';
       } else {
@@ -665,6 +676,7 @@ function openFitnessScreen(){
   $('lesson').classList.remove('active');
   $('examscreen').classList.remove('active');
   $('dashboardscreen').classList.remove('active');
+  if($('vocabScreen')) $('vocabScreen').classList.remove('active');
   $('fitnessscreen').classList.add('active');
   window.scrollTo({top:0, behavior:'instant'});
 }
@@ -740,6 +752,7 @@ function openDashboardScreen(){
   $('lesson').classList.remove('active');
   $('examscreen').classList.remove('active');
   $('fitnessscreen').classList.remove('active');
+  if($('vocabScreen')) $('vocabScreen').classList.remove('active');
   $('dashboardscreen').classList.add('active');
   window.scrollTo({top:0, behavior:'instant'});
 }
@@ -810,6 +823,8 @@ function renderDashboard(){
   renderCountdown();
   renderDashLessonProgress();
   renderDashExamAccuracy();
+  renderStreak();
+  renderWeakPoints();
 }
 
 /* ============== สำรอง/กู้คืนข้อมูล (Export / Import) ==============
@@ -870,6 +885,388 @@ if($('dataImportInput')) $('dataImportInput').addEventListener('change', (e)=>{
   if(file) importBackup(file);
   e.target.value = '';
 });
+
+/* ============== Activity Log (พื้นฐานสำหรับ Streak + Heatmap) ==============
+   บันทึกจำนวนข้อที่ตอบต่อวันใน localStorage (ไม่เก็บว่าตอบถูกหรือผิด แค่ "มีกิจกรรม")
+   เรียกใช้จากทุกจุดที่ผู้ใช้ตอบคำถาม: ข้อสอบ, แบบฝึกหัดท้ายบท, โจทย์ประจำวัน */
+const ACTIVITY_KEY = 'activityLog';
+function loadActivityLog(){
+  try{ return JSON.parse(localStorage.getItem(ACTIVITY_KEY)) || {}; }catch(e){ return {}; }
+}
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function dateKeyOf(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function logActivity(n){
+  n = n || 1;
+  const log = loadActivityLog();
+  const key = todayKey();
+  log[key] = (log[key] || 0) + n;
+  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
+}
+
+/* ============== สถิติความแม่นยำแยกหมวดหมู่ (สำหรับฟีเจอร์จุดที่ควรพัฒนา) ==============
+   เก็บแยกตามสาย (อำนวยการ/ปราบปราม) แล้วแยกตามหมวดวิชาอีกชั้น */
+const CATSTATS_KEY = 'catStats';
+function loadCatStats(){
+  try{ return JSON.parse(localStorage.getItem(CATSTATS_KEY)) || {}; }catch(e){ return {}; }
+}
+function logCatAnswer(track, cat, correct){
+  if(!track || !cat) return;
+  const stats = loadCatStats();
+  if(!stats[track]) stats[track] = {};
+  if(!stats[track][cat]) stats[track][cat] = {correct:0, total:0};
+  stats[track][cat].total++;
+  if(correct) stats[track][cat].correct++;
+  localStorage.setItem(CATSTATS_KEY, JSON.stringify(stats));
+}
+function mergeCatStats(stats){
+  const merged = {};
+  Object.values(stats).forEach(trackStats=>{
+    Object.entries(trackStats).forEach(([cat,s])=>{
+      if(!merged[cat]) merged[cat] = {correct:0, total:0};
+      merged[cat].correct += s.correct;
+      merged[cat].total += s.total;
+    });
+  });
+  return merged;
+}
+
+/* ============== Dashboard: สตรีค + ปฏิทินความเข้มข้น (Heatmap) ============== */
+function computeStreak(log){
+  let streak = 0;
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  if(!log[dateKeyOf(d)]) d.setDate(d.getDate()-1); // วันนี้ยังไม่ทำ ไม่ตัดสตรีค เริ่มเช็คจากเมื่อวาน
+  while(log[dateKeyOf(d)]){
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+function computeBestStreak(log){
+  const days = Object.keys(log).filter(k=>log[k] > 0).sort();
+  if(days.length === 0) return 0;
+  let best = 1, cur = 1;
+  for(let i=1;i<days.length;i++){
+    const prev = new Date(days[i-1] + 'T00:00:00');
+    const now = new Date(days[i] + 'T00:00:00');
+    const diff = Math.round((now - prev) / 86400000);
+    cur = (diff === 1) ? cur+1 : 1;
+    if(cur > best) best = cur;
+  }
+  return best;
+}
+function renderHeatmap(log){
+  const grid = $('heatmapGrid');
+  if(!grid) return;
+  const totalDays = 91; // ประมาณ 3 เดือนย้อนหลัง
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const start = new Date(today);
+  start.setDate(start.getDate() - (totalDays - 1));
+  start.setDate(start.getDate() - start.getDay()); // เลื่อนไปวันอาทิตย์ก่อนหน้า เพื่อให้ตารางเรียงเป็นสัปดาห์สวยงาม
+
+  let maxV = 0;
+  const cells = [];
+  const cursor = new Date(start);
+  while(cursor <= today){
+    const key = dateKeyOf(cursor);
+    const v = log[key] || 0;
+    if(v > maxV) maxV = v;
+    cells.push({date:new Date(cursor), key, v});
+    cursor.setDate(cursor.getDate()+1);
+  }
+  function levelClass(v){
+    if(v <= 0) return '';
+    if(maxV <= 1) return 'l4';
+    const ratio = v / maxV;
+    if(ratio > .75) return 'l4';
+    if(ratio > .5) return 'l3';
+    if(ratio > .25) return 'l2';
+    return 'l1';
+  }
+  grid.innerHTML = cells.map(c=>{
+    const future = c.date > today;
+    return `<div class="heat-cell ${levelClass(c.v)}" title="${c.key}: ${c.v} ข้อ"${future ? ' style="visibility:hidden;"' : ''}></div>`;
+  }).join('');
+}
+function renderStreak(){
+  const log = loadActivityLog();
+  const streak = computeStreak(log);
+  const best = computeBestStreak(log);
+  if($('streakNum')) $('streakNum').textContent = streak;
+  if($('streakBestLabel')) $('streakBestLabel').textContent = `สถิติสูงสุด ${best} วัน`;
+  renderHeatmap(log);
+}
+
+/* ============== Dashboard: จุดที่ควรพัฒนา (Weak Points) ============== */
+let currentWeakTrack = 'อำนวยการ';
+function renderWeakPoints(){
+  const list = $('weakPointsList');
+  if(!list) return;
+  const stats = loadCatStats();
+  const trackStats = currentWeakTrack === 'all' ? mergeCatStats(stats) : (stats[currentWeakTrack] || {});
+  const rows = Object.entries(trackStats)
+    .map(([cat,s])=>({cat, total:s.total, pct: s.total ? Math.round(s.correct/s.total*100) : 0}))
+    .filter(r => r.total >= 3) // ต้องมีข้อมูลพอสมควรถึงจะวิเคราะห์ได้แม่นๆ
+    .sort((a,b)=> a.pct - b.pct)
+    .slice(0,3);
+  if(rows.length === 0){
+    list.innerHTML = '<div class="dashempty">ยังไม่มีข้อมูลพอ — ลองทำข้อสอบเพิ่มอีกนิดนะ (อย่างน้อย 3 ข้อต่อหมวด)</div>';
+    return;
+  }
+  list.innerHTML = rows.map(r=>`
+    <div class="weakitem">
+      <div class="weakinfo">
+        <div class="weakcat">${r.cat}</div>
+        <div class="weakpct">แม่นยำ ${r.pct}% (${r.total} ข้อ)</div>
+      </div>
+      <button class="weakbtn" data-weakcat="${r.cat}">ฝึกหมวดนี้เพิ่ม</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-weakcat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const cat = btn.dataset.weakcat;
+      const track = (currentWeakTrack === 'all') ? 'อำนวยการ' : currentWeakTrack;
+      openExamScreen(track, [cat]);
+    });
+  });
+}
+if($('weakTabs')){
+  $('weakTabs').querySelectorAll('.weaktab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentWeakTrack = btn.dataset.track;
+      $('weakTabs').querySelectorAll('.weaktab').forEach(b=> b.classList.toggle('active', b===btn));
+      renderWeakPoints();
+    });
+  });
+}
+
+/* ============== โจทย์ประจำวัน (Daily Challenge) ==============
+   สุ่มโจทย์คณิต/ตรรกะ 10 ข้อ ครั้งแรกที่เข้าแอปในแต่ละวัน ชุดเดิมคงอยู่ตลอดวันนั้น
+   ทำในโมดัลแยกจากหน้าคลังข้อสอบหลัก ไม่ปนกับสถิติ catStats ของคลังข้อสอบ */
+const DAILY_KEY = 'dailyChallenge';
+let dailyAnswers = {};
+function loadDailyChallengeRaw(){
+  try{ return JSON.parse(localStorage.getItem(DAILY_KEY)) || null; }catch(e){ return null; }
+}
+function saveDailyChallengeRaw(obj){ localStorage.setItem(DAILY_KEY, JSON.stringify(obj)); }
+function getOrCreateDailyChallenge(){
+  const key = todayKey();
+  let dc = loadDailyChallengeRaw();
+  if(!dc || dc.date !== key){
+    dc = { date:key, questions: generateUniqueMathQuestions(10, []), answers:{}, done:false };
+    saveDailyChallengeRaw(dc);
+  }
+  return dc;
+}
+function updateDailyBanner(){
+  const title = $('dailyBannerTitle');
+  const sub = $('dailyBannerSub');
+  if(!title || !sub) return;
+  const dc = getOrCreateDailyChallenge();
+  const answered = Object.keys(dc.answers).length;
+  if(dc.done){
+    const correct = Object.entries(dc.answers).filter(([qi,ci])=> dc.questions[qi].correct === ci).length;
+    title.textContent = '✅ ทำโจทย์ประจำวันแล้ว';
+    sub.textContent = `วันนี้ได้ ${correct}/${dc.questions.length} ข้อ — พรุ่งนี้มีชุดใหม่`;
+  } else if(answered > 0){
+    title.textContent = '🔥 โจทย์ประจำวัน — ทำต่อ';
+    sub.textContent = `ทำไปแล้ว ${answered}/${dc.questions.length} ข้อ`;
+  } else {
+    title.textContent = 'โจทย์ประจำวันนี้';
+    sub.textContent = `${dc.questions.length} ข้อ คณิต/ตรรกะ — แตะเพื่อเริ่มทำ`;
+  }
+}
+function renderDailyChallenge(){
+  const dc = getOrCreateDailyChallenge();
+  dailyAnswers = Object.assign({}, dc.answers);
+  const qs = dc.questions;
+  const answeredCount = Object.keys(dailyAnswers).length;
+  $('dailyProgress').textContent = `ตอบไปแล้ว ${answeredCount}/${qs.length} ข้อ`;
+  if(answeredCount >= qs.length){
+    const correct = Object.entries(dailyAnswers).filter(([qi,ci])=> qs[qi].correct === ci).length;
+    $('dailyList').style.display = 'none';
+    $('dailyDoneBox').style.display = 'block';
+    $('ddScoreText').textContent = `${correct}/${qs.length} ข้อถูก`;
+    return;
+  }
+  $('dailyList').style.display = 'block';
+  $('dailyDoneBox').style.display = 'none';
+  $('dailyList').innerHTML = qs.map((q,i)=>`
+    <div class="examq">
+      <div class="eqhead"><span class="eqnum">ข้อที่ ${i+1}</span></div>
+      <div class="eqtext">${q.q}</div>
+      ${q.choices.map((c,ci)=>`<button class="echoice" data-dqi="${i}" data-dci="${ci}"><span class="etext">${c}</span><span class="eicon ic-correct">✓</span><span class="eicon ic-wrong">✗</span></button>`).join('')}
+      <div class="eexplain" data-deexplain="${i}">${q.explain}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('#dailyList .echoice').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const qi = parseInt(btn.dataset.dqi);
+      const ci = parseInt(btn.dataset.dci);
+      if(dailyAnswers[qi] !== undefined) return;
+      dailyAnswers[qi] = ci;
+      const q = qs[qi];
+      logActivity(1);
+      document.querySelectorAll(`#dailyList .echoice[data-dqi="${qi}"]`).forEach(b=>{
+        const bci = parseInt(b.dataset.dci);
+        if(bci === q.correct) b.classList.add('correct');
+        else if(bci === ci) b.classList.add('wrong');
+      });
+      const exp = document.querySelector(`[data-deexplain="${qi}"]`);
+      if(exp) exp.classList.add('show');
+      const dc2 = loadDailyChallengeRaw() || dc;
+      dc2.answers = dailyAnswers;
+      if(Object.keys(dailyAnswers).length >= qs.length) dc2.done = true;
+      saveDailyChallengeRaw(dc2);
+      updateDailyBanner();
+      $('dailyProgress').textContent = `ตอบไปแล้ว ${Object.keys(dailyAnswers).length}/${qs.length} ข้อ`;
+      if(Object.keys(dailyAnswers).length >= qs.length){
+        setTimeout(()=> renderDailyChallenge(), 700);
+      }
+    });
+  });
+}
+function openDailyChallenge(){
+  renderDailyChallenge();
+  $('dailyOverlay').classList.add('show');
+}
+function closeDailyChallenge(){
+  $('dailyOverlay').classList.remove('show');
+}
+if($('dailyClose')) $('dailyClose').addEventListener('click', closeDailyChallenge);
+if($('dailyOverlay')) $('dailyOverlay').addEventListener('click', (e)=>{ if(e.target.id==='dailyOverlay') closeDailyChallenge(); });
+updateDailyBanner();
+
+/* ============== เกมจับคู่คำศัพท์ EN-TH (Vocab Matching Game) ==============
+   สุ่ม 8 คู่จาก VOCAB_BANK ต่อรอบ จับเวลานับขึ้น เก็บสถิติเวลาที่ดีที่สุดไว้ใน localStorage */
+let vocabPairs = [];
+let vocabCards = [];
+let vocabSelected = [];
+let vocabMatchedCount = 0;
+let vocabStartTime = 0;
+let vocabTimerInterval = null;
+let vocabTimerSeconds = 0;
+const VOCAB_BEST_KEY = 'vocabBestTimeSec';
+
+function formatVocabTime(sec){
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function loadVocabBest(){
+  const v = parseInt(localStorage.getItem(VOCAB_BEST_KEY), 10);
+  return isNaN(v) ? null : v;
+}
+function saveVocabBestIfBetter(sec){
+  const cur = loadVocabBest();
+  if(cur === null || sec < cur){ localStorage.setItem(VOCAB_BEST_KEY, String(sec)); return true; }
+  return false;
+}
+function renderVocabBest(){
+  const best = loadVocabBest();
+  if($('vocabBest')) $('vocabBest').textContent = best === null ? '--:--' : formatVocabTime(best);
+}
+function stopVocabTimer(){
+  if(vocabTimerInterval){ clearInterval(vocabTimerInterval); vocabTimerInterval = null; }
+}
+function startVocabTimer(){
+  stopVocabTimer();
+  vocabStartTime = Date.now();
+  vocabTimerSeconds = 0;
+  if($('vocabTimer')) $('vocabTimer').textContent = '00:00';
+  vocabTimerInterval = setInterval(()=>{
+    vocabTimerSeconds = Math.floor((Date.now() - vocabStartTime) / 1000);
+    if($('vocabTimer')) $('vocabTimer').textContent = formatVocabTime(vocabTimerSeconds);
+  }, 250);
+}
+function newVocabRound(){
+  const pool = shuffleArray(VOCAB_BANK).slice(0,8);
+  vocabPairs = pool;
+  vocabMatchedCount = 0;
+  vocabSelected = [];
+  if($('vocabMatched')) $('vocabMatched').textContent = '0/' + pool.length;
+  const cards = [];
+  pool.forEach((p,i)=>{
+    cards.push({key:'en'+i, text:p.en, type:'en', pairId:i, matched:false});
+    cards.push({key:'th'+i, text:p.th, type:'th', pairId:i, matched:false});
+  });
+  vocabCards = shuffleArray(cards);
+  renderVocabGrid();
+  startVocabTimer();
+}
+function renderVocabGrid(){
+  const grid = $('vocabGrid');
+  if(!grid) return;
+  grid.innerHTML = vocabCards.map(c=>`<div class="vocab-card${c.matched?' matched':''}" data-vkey="${c.key}">${c.text}</div>`).join('');
+  grid.querySelectorAll('.vocab-card').forEach(el=>{
+    el.addEventListener('click', ()=> handleVocabCardClick(el.dataset.vkey));
+  });
+}
+function handleVocabCardClick(key){
+  const card = vocabCards.find(c=>c.key===key);
+  if(!card || card.matched) return;
+  if(vocabSelected.includes(key)) return;
+  if(vocabSelected.length >= 2) return;
+  vocabSelected.push(key);
+  const el = document.querySelector(`.vocab-card[data-vkey="${key}"]`);
+  if(el) el.classList.add('selected');
+  if(vocabSelected.length === 2){
+    const [k1,k2] = vocabSelected;
+    const c1 = vocabCards.find(c=>c.key===k1);
+    const c2 = vocabCards.find(c=>c.key===k2);
+    if(c1.pairId === c2.pairId && c1.type !== c2.type){
+      c1.matched = true; c2.matched = true;
+      vocabMatchedCount++;
+      if($('vocabMatched')) $('vocabMatched').textContent = vocabMatchedCount + '/' + vocabPairs.length;
+      setTimeout(()=>{
+        vocabSelected = [];
+        renderVocabGrid();
+        if(vocabMatchedCount >= vocabPairs.length) finishVocabRound();
+      }, 250);
+    } else {
+      const el1 = document.querySelector(`.vocab-card[data-vkey="${k1}"]`);
+      const el2 = document.querySelector(`.vocab-card[data-vkey="${k2}"]`);
+      if(el1) el1.classList.add('wrong');
+      if(el2) el2.classList.add('wrong');
+      setTimeout(()=>{
+        vocabSelected = [];
+        renderVocabGrid();
+      }, 550);
+    }
+  }
+}
+function finishVocabRound(){
+  stopVocabTimer();
+  const isBest = saveVocabBestIfBetter(vocabTimerSeconds);
+  showToast(isBest ? `จับคู่ครบแล้ว! สถิติใหม่ ${formatVocabTime(vocabTimerSeconds)} 🏆` : `จับคู่ครบแล้ว! ใช้เวลา ${formatVocabTime(vocabTimerSeconds)} 🎉`);
+  renderVocabBest();
+}
+function openVocabGame(){
+  renderVocabBest();
+  newVocabRound();
+  $('roadmap').classList.remove('active');
+  $('lesson').classList.remove('active');
+  $('examscreen').classList.remove('active');
+  $('fitnessscreen').classList.remove('active');
+  $('dashboardscreen').classList.remove('active');
+  $('vocabScreen').classList.add('active');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+if($('vocabBackBtn')){
+  $('vocabBackBtn').addEventListener('click', ()=>{
+    stopVocabTimer();
+    $('vocabScreen').classList.remove('active');
+    $('roadmap').classList.add('active');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+}
+if($('vocabShuffleBtn')) $('vocabShuffleBtn').addEventListener('click', ()=> newVocabRound());
 
 renderRoadmap();
 

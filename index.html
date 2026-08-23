@@ -340,6 +340,71 @@
   .dashbar .dashbar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),#9fd0f0);}
   .dashbar .dashbar-fill.amber{background:linear-gradient(90deg,var(--amber),#ffd08a);}
   .dashempty{font-size:12px;color:var(--muted-dim);text-align:center;padding:10px 0;}
+
+  /* ---------- streak counter + activity heatmap ---------- */
+  .streakrow{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line);}
+  .streaknum{font-size:30px;font-weight:700;color:var(--amber);line-height:1;}
+  .streaklabel{font-size:11.5px;color:var(--muted);line-height:1.4;}
+  .streaklabel b{color:var(--ink);}
+  .heatmap-wrap{overflow-x:auto;padding-bottom:4px;}
+  .heatmap-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,11px);gap:3px;width:max-content;}
+  .heat-cell{width:11px;height:11px;border-radius:3px;background:var(--line-soft);}
+  .heat-cell.l1{background:var(--amber-glow);}
+  .heat-cell.l2{background:var(--amber);opacity:.55;}
+  .heat-cell.l3{background:var(--amber);opacity:.8;}
+  .heat-cell.l4{background:var(--amber);}
+  .heatmap-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:6px;font-size:10px;color:var(--muted-dim);}
+  .heatmap-legend .heat-cell{width:9px;height:9px;}
+
+  /* ---------- weak points ---------- */
+  .weaktabs{display:flex;gap:6px;margin-bottom:10px;}
+  .weaktab{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-family:inherit;font-size:11px;font-weight:600;padding:7px 4px;cursor:pointer;text-align:center;}
+  .weaktab.active{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .weakitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line-soft);}
+  .weakitem:last-child{border-bottom:none;}
+  .weakinfo{flex:1;min-width:0;}
+  .weakcat{font-size:12.5px;font-weight:600;color:var(--ink);}
+  .weakpct{font-size:11px;color:var(--red);}
+  .weakbtn{background:var(--card);border:1px solid var(--amber);color:var(--amber);border-radius:8px;
+    font-family:inherit;font-size:11px;font-weight:600;padding:7px 9px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+
+  /* ---------- daily challenge banner + overlay ---------- */
+  .dailybanner{background:linear-gradient(135deg,rgba(255,176,71,.16),rgba(255,176,71,.05));
+    border:1px solid var(--amber);border-radius:14px;padding:12px 14px;margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .dailybanner .dbicon{font-size:24px;flex-shrink:0;}
+  .dailybanner .dbtext{flex:1;min-width:0;}
+  .dailybanner .dbtitle{font-size:13px;font-weight:700;color:var(--amber);}
+  .dailybanner .dbsub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .dailybanner .dbarrow{font-size:16px;color:var(--amber);flex-shrink:0;}
+  .daily-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;padding:14px;overflow-y:auto;}
+  .daily-overlay.show{display:block;}
+  .daily-modal{max-width:480px;margin:0 auto;background:var(--bg);border-radius:16px;padding:16px;min-height:calc(100vh - 28px);}
+  .daily-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .daily-head h3{font-size:15px;margin:0;}
+  .daily-close{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:50%;
+    width:30px;height:30px;font-size:14px;cursor:pointer;}
+  .daily-progress{font-size:11.5px;color:var(--muted);margin-bottom:10px;}
+  .daily-done-box{text-align:center;padding:30px 10px;}
+  .daily-done-box .ddscore{font-size:32px;font-weight:700;color:var(--amber);margin-bottom:6px;}
+
+  /* ---------- vocab matching game ---------- */
+  #vocabScreen{display:none;}
+  #vocabScreen.active{display:block;}
+  .vocab-stats{display:flex;gap:10px;margin-bottom:12px;}
+  .vocab-stat{flex:1;background:var(--card-in);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;}
+  .vocab-stat .vslabel{font-size:10.5px;color:var(--muted-dim);}
+  .vocab-stat .vsval{font-size:19px;font-weight:700;color:var(--amber);margin-top:2px;}
+  .vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .vocab-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 8px;
+    font-size:12.5px;text-align:center;cursor:pointer;min-height:52px;display:flex;align-items:center;justify-content:center;
+    line-height:1.35;word-break:break-word;}
+  .vocab-card.selected{border-color:var(--blue);background:rgba(111,173,224,.14);color:var(--blue);}
+  .vocab-card.matched{border-color:var(--green);background:rgba(102,181,134,.14);color:var(--green);opacity:.6;cursor:default;}
+  .vocab-card.wrong{border-color:var(--red);background:rgba(241,106,68,.14);}
+  .vocab-done-box{text-align:center;padding:30px 10px;}
+  .vocab-done-box .vdtime{font-size:32px;font-weight:700;color:var(--green);margin-bottom:6px;}
   .countdownwrap{text-align:center;padding:6px 0;}
   .countdownnum{font-size:42px;font-weight:700;color:var(--amber);line-height:1;}
   .countdownlabel{font-size:12px;color:var(--muted);margin-top:4px;}
@@ -392,6 +457,16 @@
     <button class="tool-btn" onclick="openFlashcards()">🎴 <span data-i18n="toolFlash">ทบทวนบทเรียน (Flashcards)</span></button>
     <button class="tool-btn" onclick="openFitnessScreen()">🏃 <span data-i18n="toolFitness">ฝึกร่างกาย</span></button>
     <button class="tool-btn" onclick="openDashboardScreen()">📊 <span data-i18n="toolDashboard">สรุปผล/นับถอยหลัง</span></button>
+    <button class="tool-btn" onclick="openVocabGame()">🧩 <span data-i18n="toolVocab">เกมจับคู่คำศัพท์</span></button>
+  </div>
+
+  <div class="dailybanner" id="dailyBanner" onclick="openDailyChallenge()">
+    <div class="dbicon">🔥</div>
+    <div class="dbtext">
+      <div class="dbtitle" id="dailyBannerTitle">โจทย์ประจำวันนี้</div>
+      <div class="dbsub" id="dailyBannerSub">10 ข้อ คณิต/ตรรกะ — แตะเพื่อเริ่มทำ</div>
+    </div>
+    <div class="dbarrow">›</div>
   </div>
 
   <div class="safetybox">
@@ -590,9 +665,66 @@
       <div id="dashLessonProgress"></div>
     </div>
 
-    <div class="dashcard">
+    <div class="dashcard" id="dashExamAccuracyCard">
       <h3><span class="ic">🎯</span>ความแม่นยำคลังข้อสอบ (ครั้งล่าสุด)</h3>
       <div id="dashExamAccuracy"></div>
+    </div>
+
+    <div class="dashcard">
+      <h3><span class="ic">🔥</span>สตรีคการฝึก & ปฏิทินความเข้มข้น</h3>
+      <div class="streakrow">
+        <div class="streaknum" id="streakNum">0</div>
+        <div class="streaklabel">วันติดต่อกัน<br><b id="streakBestLabel">สถิติสูงสุด 0 วัน</b></div>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+      </div>
+      <div class="heatmap-legend">
+        <span>น้อย</span>
+        <div class="heat-cell"></div><div class="heat-cell l1"></div><div class="heat-cell l2"></div><div class="heat-cell l3"></div><div class="heat-cell l4"></div>
+        <span>มาก</span>
+      </div>
+    </div>
+
+    <div class="dashcard">
+      <h3><span class="ic">📉</span>จุดที่ควรพัฒนา (หมวดที่แม่นยำต่ำสุด)</h3>
+      <div class="weaktabs" id="weakTabs">
+        <button class="weaktab active" data-track="อำนวยการ">สายอำนวยการ</button>
+        <button class="weaktab" data-track="ปราบปราม">สายปราบปราม</button>
+        <button class="weaktab" data-track="all">ทุกสาย</button>
+      </div>
+      <div id="weakPointsList"></div>
+    </div>
+  </div>
+
+  <div id="vocabScreen">
+    <button class="backbtn" id="vocabBackBtn">‹ <span data-i18n="backToRoadmap">กลับไปที่แผนที่เนื้อหา</span></button>
+    <div class="lhead">
+      <div class="ltag">VOCAB MATCH</div>
+      <h2 data-i18n="vocabH2">เกมจับคู่คำศัพท์ EN-TH</h2>
+      <p data-i18n="vocabP">คำศัพท์ที่เจอบ่อยในข้อสอบราชการและคำเฉพาะทางตำรวจ — จับคู่ให้ครบเร็วที่สุด</p>
+    </div>
+    <div class="vocab-stats">
+      <div class="vocab-stat"><div class="vslabel">เวลา</div><div class="vsval" id="vocabTimer">00:00</div></div>
+      <div class="vocab-stat"><div class="vslabel">จับคู่แล้ว</div><div class="vsval" id="vocabMatched">0/8</div></div>
+      <div class="vocab-stat"><div class="vslabel">สถิติดีที่สุด</div><div class="vsval" id="vocabBest">--:--</div></div>
+    </div>
+    <div class="vocab-grid" id="vocabGrid"></div>
+    <button class="tool-btn" id="vocabShuffleBtn" style="margin-top:14px;">🔀 สุ่มรอบใหม่</button>
+  </div>
+</div>
+
+<div class="daily-overlay" id="dailyOverlay">
+  <div class="daily-modal">
+    <div class="daily-head">
+      <h3>🔥 โจทย์ประจำวัน</h3>
+      <button class="daily-close" id="dailyClose">✕</button>
+    </div>
+    <div class="daily-progress" id="dailyProgress"></div>
+    <div id="dailyList"></div>
+    <div class="daily-done-box" id="dailyDoneBox" style="display:none;">
+      <div class="ddscore" id="ddScoreText"></div>
+      <div>เก่งมาก! กลับมาทำใหม่ได้พรุ่งนี้ 💪</div>
     </div>
   </div>
 </div>
