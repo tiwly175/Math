@@ -2,6 +2,100 @@
 
 const $ = id => document.getElementById(id);
 
+/* ============== theme switcher (กลางคืน/มืด/กลางวัน) ============== */
+const THEME_KEY = 'appThemePref';
+function loadThemePref(){ return localStorage.getItem(THEME_KEY) || 'dark'; }
+function saveThemePref(v){ localStorage.setItem(THEME_KEY, v); }
+function applyTheme(theme){
+  if(theme === 'dark'){ document.documentElement.removeAttribute('data-theme'); }
+  else{ document.documentElement.setAttribute('data-theme', theme); }
+  document.querySelectorAll('#themeBtns .icbtn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.theme === theme);
+  });
+  saveThemePref(theme);
+}
+document.querySelectorAll('#themeBtns .icbtn').forEach(b=>{
+  b.addEventListener('click', ()=> applyTheme(b.dataset.theme));
+});
+applyTheme(loadThemePref());
+
+/* ============== ปรับความสว่างหน้าจอ (เหมือนสไลด์ปรับแสงมือถือ) ============== */
+const BRIGHT_KEY = 'appBrightnessPref';
+function loadBrightPref(){ const v = parseInt(localStorage.getItem(BRIGHT_KEY), 10); return isNaN(v) ? 100 : v; }
+function saveBrightPref(v){ localStorage.setItem(BRIGHT_KEY, String(v)); }
+function applyBrightness(pct){
+  document.documentElement.style.setProperty('--user-brightness', (pct / 100).toFixed(2));
+  saveBrightPref(pct);
+}
+const brightSlider = $('brightSlider');
+if(brightSlider){
+  brightSlider.value = loadBrightPref();
+  applyBrightness(brightSlider.value);
+  brightSlider.addEventListener('input', ()=> applyBrightness(brightSlider.value));
+}
+
+/* ============== เปลี่ยนภาษา UI (ไทย/อังกฤษ/จีน/ญี่ปุ่น) ==============
+   หมายเหตุ: แปลเฉพาะข้อความหน้าจอหลัก (ปุ่ม/หัวข้อ/ป้ายกำกับ) เท่านั้น
+   เนื้อหาบทเรียนและคลังข้อสอบยังคงเป็นภาษาไทย เพราะเป็นเนื้อหาสำหรับสอบข้าราชการไทยโดยเฉพาะ
+   (เช่น ข้อสอบวัดความสามารถภาษาไทย/กฎหมายไทย การแปลจะทำให้ข้อสอบเสียความหมาย/ใช้ติวจริงไม่ได้) */
+const LANG_KEY = 'appLangPref';
+const TRANSLATIONS = {
+  appTitle:        { en:'Police Exam & Math Prep', zh:'警考与数学备考', ja:'警察試験＆数学対策' },
+  appSubtitle:      { en:'Step-by-step from the basics — every subject you need for the exam', zh:'从基础开始循序渐进，涵盖考试所需全部科目', ja:'基礎から順を追って、試験に必要な全科目を網羅' },
+  tabMath:          { en:'Math', zh:'数学', ja:'数学' },
+  tabThai:          { en:'Thai', zh:'泰语', ja:'タイ語' },
+  tabEng:           { en:'English', zh:'英语', ja:'英語' },
+  tabLaw:           { en:'Law', zh:'法律', ja:'法律' },
+  tabSocial:        { en:'Social', zh:'社会', ja:'社会' },
+  toolFlash:        { en:'Review Lessons (Flashcards)', zh:'复习课程（速记卡）', ja:'レッスン復習（フラッシュカード）' },
+  toolFitness:      { en:'Fitness Training', zh:'体能训练', ja:'体力トレーニング' },
+  toolDashboard:    { en:'Summary / Countdown', zh:'总结/倒计时', ja:'サマリー／カウントダウン' },
+  safetyTitle:      { en:'Privacy & Safety (read before use)', zh:'隐私与安全（使用前必读）', ja:'安全性について（利用前にお読みください）' },
+  trackLabel:       { en:'Choose your exam track (for the special police lessons & exam bank below)', zh:'选择报考序列（用于下方专属警考课程与题库）', ja:'受験コースを選択（下記の警察特別レッスンと問題バンク用）' },
+  trackAdmin:       { en:'Administrative Track', zh:'行政序列', ja:'事務系コース' },
+  trackCrime:       { en:'Crime Suppression Track', zh:'治安打击序列', ja:'犯罪鎮圧コース' },
+  examNavAdmin:     { en:'Admin Track Exam Bank', zh:'行政序列题库', ja:'事務系コース問題バンク' },
+  examNavCrime:     { en:'Crime Suppression Exam Bank', zh:'治安打击序列题库', ja:'犯罪鎮圧コース問題バンク' },
+  progressLabel:    { en:'Progress', zh:'学习进度', ja:'進捗' },
+  backToRoadmap:    { en:'Back to Roadmap', zh:'返回内容地图', ja:'ロードマップに戻る' },
+  examCatFilterLabel:{ en:'Subject categories to draw from (tap to toggle)', zh:'抽题科目分类（点击切换）', ja:'出題する科目カテゴリー（タップで切替）' },
+  examCountLabel:   { en:'Number of questions (type your own, 10–300)', zh:'题目数量（可自定义 10-300 题）', ja:'問題数（10〜300問で自由入力可）' },
+  examDurLabel:     { en:'Exam duration (minutes) — type your own, 5–300', zh:'考试时间（分钟）— 可自定义 5-300 分钟', ja:'試験時間（分）— 5〜300分で自由入力可' },
+  examShuffleBtn:   { en:'Shuffle New Set', zh:'重新抽题', ja:'新しいセットをシャッフル' },
+  examTimerBtn:     { en:'Start Timer', zh:'开始计时', ja:'タイマー開始' },
+  fitnessH2:        { en:'Physical Fitness Training', zh:'体能训练', ja:'体力トレーニング' },
+  fitnessP:         { en:'For those preparing for the Crime Suppression track exam (and other tracks with a fitness test) — running, push-ups, sit-ups', zh:'适用于备考治安打击序列（及其他有体能测试的序列）— 跑步、俯卧撑、仰卧起坐', ja:'犯罪鎮圧コース（体力試験のある他コースも含む）受験者向け — ランニング、腕立て伏せ、腹筋' },
+  dashboardH2:      { en:'Overall Summary & Exam Countdown', zh:'总体总结与考试倒计时', ja:'総合サマリー＆試験カウントダウン' },
+  dashboardP:       { en:"An overview of your progress and accuracy in each subject", zh:'各科目学习进度与准确率总览', ja:'各科目の進捗と正答率の概要' },
+  fcHint:           { en:'Tap the card to see the answer', zh:'点击卡片查看答案', ja:'カードをタップして答えを見る' },
+  fcPrev:           { en:'Previous', zh:'上一个', ja:'前へ' },
+  fcFlip:           { en:'Flip Card', zh:'翻转卡片', ja:'カードを裏返す' },
+  fcNext:           { en:'Next', zh:'下一个', ja:'次へ' },
+};
+// เก็บข้อความไทยต้นฉบับไว้ก่อน เพื่อใช้สลับกลับตอนเลือก "TH"
+const THAI_ORIGINALS = {};
+document.querySelectorAll('[data-i18n]').forEach(el=>{
+  THAI_ORIGINALS[el.dataset.i18n] = THAI_ORIGINALS[el.dataset.i18n] ?? el.textContent;
+});
+function applyLanguage(lang){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    if(lang === 'th' || !TRANSLATIONS[key] || !TRANSLATIONS[key][lang]){
+      el.textContent = THAI_ORIGINALS[key] ?? el.textContent;
+    } else {
+      el.textContent = TRANSLATIONS[key][lang];
+    }
+  });
+  document.querySelectorAll('#langBtns .langbtn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  localStorage.setItem(LANG_KEY, lang);
+}
+document.querySelectorAll('#langBtns .langbtn').forEach(b=>{
+  b.addEventListener('click', ()=> applyLanguage(b.dataset.lang));
+});
+applyLanguage(localStorage.getItem(LANG_KEY) || 'th');
+
 /* ============== police track picker ============== */
 const TRACK_KEY = 'policeTrackPref';
 function loadTrackPref(){ return localStorage.getItem(TRACK_KEY) || ''; }

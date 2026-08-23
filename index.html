@@ -13,13 +13,42 @@
     --amber:#FFB447; --amber-glow:rgba(255,176,71,.45);
     --red:#F16A44; --green:#66B586; --blue:#6FADE0; --purple:#AB9EFF;
   }
+  /* ---------- โหมดกลางคืน: มืดสนิท ลดความสว่าง/ความอิ่มสี ถนอมสายตาตอนดึก ---------- */
+  :root[data-theme="night"]{
+    --bg:#0A0B0C; --bg-grad:#0E0F10; --card:#141516; --card-in:#0A0A0A;
+    --line:#232423; --line-soft:#1B1C1B; --ink:#D8CFC2; --muted:#8A8377; --muted-dim:#615B51;
+    --amber:#C98A3C; --amber-glow:rgba(201,138,60,.30);
+    --red:#B85B3F; --green:#5B9270; --blue:#5C87A8; --purple:#8B7FC4;
+  }
+  /* ---------- โหมดกลางวัน: พื้นสว่าง ตัวอักษรเข้ม อ่านง่ายกลางแดด/ตอนเช้า ---------- */
+  :root[data-theme="light"]{
+    --bg:#F6F5F1; --bg-grad:#FFFFFF; --card:#FFFFFF; --card-in:#EFEDE6;
+    --line:#DAD5C9; --line-soft:#E9E6DD; --ink:#20242A; --muted:#5B6169; --muted-dim:#82878E;
+    --amber:#B96E12; --amber-glow:rgba(185,110,18,.25);
+    --red:#C6482A; --green:#3F8F5F; --blue:#2E76B5; --purple:#6E5DC6;
+  }
   *{box-sizing:border-box;}
   body{
     margin:0;
     font-family:'Kanit',sans-serif;
     background:radial-gradient(circle at 15% 0%, var(--bg-grad), var(--bg) 60%);
     color:var(--ink); min-height:100vh; padding:12px 12px 60px;
+    transition:background-color .2s, color .2s, filter .15s;
+    filter:brightness(var(--user-brightness, 1));
   }
+  /* ---------- display settings bar: theme (compact icons) + brightness + language ---------- */
+  .dispbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:10px auto 0;max-width:360px;}
+  .dispgroup{display:flex;align-items:center;gap:5px;}
+  .icbtn{width:30px;height:30px;border-radius:50%;background:var(--card);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0;flex-shrink:0;}
+  .icbtn.active{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber);}
+  .langbtn{width:30px;height:30px;border-radius:8px;background:var(--card);border:1px solid var(--line);color:var(--muted);
+    display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;cursor:pointer;padding:0;flex-shrink:0;}
+  .langbtn.active{border-color:var(--blue);color:var(--blue);background:rgba(111,173,224,.1);}
+  .dispdivider{width:1px;height:20px;background:var(--line);flex-shrink:0;}
+  .brightwrap{display:flex;align-items:center;gap:6px;width:100%;max-width:280px;margin:2px auto 0;}
+  .brightwrap .bic{font-size:11px;color:var(--muted-dim);flex-shrink:0;}
+  .brightwrap input[type="range"]{flex:1;accent-color:var(--amber);height:4px;}
   .wrap{max-width:520px;margin:0 auto;}
   header{text-align:center;margin-bottom:14px;}
   .eyebrow{font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:500;text-transform:uppercase;}
@@ -322,26 +351,45 @@
 <div class="wrap">
   <header>
     <div class="eyebrow">POLICE EXAM · FROM ZERO</div>
-    <h1>ติวสอบตำรวจ & คณิตศาสตร์</h1>
-    <div class="sub">เรียงเนื้อหาจากพื้นฐานที่สุด ไปทีละขั้น ครบทุกวิชาที่ใช้สอบ</div>
+    <h1 data-i18n="appTitle">ติวสอบตำรวจ & คณิตศาสตร์</h1>
+    <div class="sub" data-i18n="appSubtitle">เรียงเนื้อหาจากพื้นฐานที่สุด ไปทีละขั้น ครบทุกวิชาที่ใช้สอบ</div>
+    <div class="dispbar">
+      <div class="dispgroup" id="themeBtns">
+        <button class="icbtn" data-theme="night" title="กลางคืน (ถนอมตา)">🌙</button>
+        <button class="icbtn" data-theme="dark" title="มืด (ปกติ)">⚫</button>
+        <button class="icbtn" data-theme="light" title="กลางวัน (สว่าง)">☀️</button>
+      </div>
+      <div class="dispdivider"></div>
+      <div class="dispgroup" id="langBtns">
+        <button class="langbtn" data-lang="th" title="ไทย">TH</button>
+        <button class="langbtn" data-lang="en" title="English">EN</button>
+        <button class="langbtn" data-lang="zh" title="中文">中</button>
+        <button class="langbtn" data-lang="ja" title="日本語">日</button>
+      </div>
+    </div>
+    <div class="brightwrap">
+      <span class="bic">🔅</span>
+      <input type="range" id="brightSlider" min="70" max="130" step="5" value="100">
+      <span class="bic">🔆</span>
+    </div>
   </header>
 
   <div class="tabs" id="subjectTabs">
-    <button class="tab active" onclick="switchSubject('math', this)">📐 คณิต</button>
-    <button class="tab" onclick="switchSubject('thai', this)">📖 ไทย</button>
-    <button class="tab" onclick="switchSubject('eng', this)">🔤 อังกฤษ</button>
-    <button class="tab" onclick="switchSubject('law', this)">⚖️ กฎหมาย</button>
-    <button class="tab" onclick="switchSubject('social', this)">🌏 สังคม</button>
+    <button class="tab active" onclick="switchSubject('math', this)">📐 <span data-i18n="tabMath">คณิต</span></button>
+    <button class="tab" onclick="switchSubject('thai', this)">📖 <span data-i18n="tabThai">ไทย</span></button>
+    <button class="tab" onclick="switchSubject('eng', this)">🔤 <span data-i18n="tabEng">อังกฤษ</span></button>
+    <button class="tab" onclick="switchSubject('law', this)">⚖️ <span data-i18n="tabLaw">กฎหมาย</span></button>
+    <button class="tab" onclick="switchSubject('social', this)">🌏 <span data-i18n="tabSocial">สังคม</span></button>
   </div>
 
   <div class="tool-btns">
-    <button class="tool-btn" onclick="openFlashcards()">🎴 ทบทวนบทเรียน (Flashcards)</button>
-    <button class="tool-btn" onclick="openFitnessScreen()">🏃 ฝึกร่างกาย</button>
-    <button class="tool-btn" onclick="openDashboardScreen()">📊 สรุปผล/นับถอยหลัง</button>
+    <button class="tool-btn" onclick="openFlashcards()">🎴 <span data-i18n="toolFlash">ทบทวนบทเรียน (Flashcards)</span></button>
+    <button class="tool-btn" onclick="openFitnessScreen()">🏃 <span data-i18n="toolFitness">ฝึกร่างกาย</span></button>
+    <button class="tool-btn" onclick="openDashboardScreen()">📊 <span data-i18n="toolDashboard">สรุปผล/นับถอยหลัง</span></button>
   </div>
 
   <div class="safetybox">
-    <div class="stitle">⚠️ ความปลอดภัย (อ่านก่อนใช้งาน)</div>
+    <div class="stitle">⚠️ <span data-i18n="safetyTitle">ความปลอดภัย (อ่านก่อนใช้งาน)</span></div>
     <ul>
       <li>แอปพลิเคชันนี้ <strong>ทำงานออฟไลน์ 100%</strong> (หลังโหลดครั้งแรก)</li>
       <li><strong>ไม่มีการเก็บข้อมูลส่วนตัว</strong> เช่น ชื่อ อีเมล หรือ IP Address และ<strong>ไม่มีสคริปต์ติดตาม (analytics) ใดๆ ทั้งสิ้น</strong></li>
@@ -352,20 +400,20 @@
   </div>
 
   <div class="trackwrap">
-    <div class="tlabel">🎯 เลือกสายที่จะสอบ (สำหรับติวตำรวจบทพิเศษและคลังข้อสอบด้านล่าง)</div>
+    <div class="tlabel">🎯 <span data-i18n="trackLabel">เลือกสายที่จะสอบ (สำหรับติวตำรวจบทพิเศษและคลังข้อสอบด้านล่าง)</span></div>
     <div class="trackbtns">
-      <button class="trackbtn" id="trackAdmin" data-track="อำนวยการ">สายอำนวยการ</button>
-      <button class="trackbtn" id="trackCrime" data-track="ปราบปราม">สายปราบปราม</button>
+      <button class="trackbtn" id="trackAdmin" data-track="อำนวยการ"><span data-i18n="trackAdmin">สายอำนวยการ</span></button>
+      <button class="trackbtn" id="trackCrime" data-track="ปราบปราม"><span data-i18n="trackCrime">สายปราบปราม</span></button>
     </div>
     <div class="trackbanner" id="trackBanner"></div>
     <div class="examnav">
-      <button class="examnavbtn" id="goExamAdmin">📝 คลังข้อสอบสายอำนวยการ</button>
-      <button class="examnavbtn" id="goExamCrime">📝 คลังข้อสอบสายปราบปราม</button>
+      <button class="examnavbtn" id="goExamAdmin">📝 <span data-i18n="examNavAdmin">คลังข้อสอบสายอำนวยการ</span></button>
+      <button class="examnavbtn" id="goExamCrime">📝 <span data-i18n="examNavCrime">คลังข้อสอบสายปราบปราม</span></button>
     </div>
   </div>
 
   <div class="progresswrap">
-    <div class="row"><span>ความคืบหน้า</span><b id="progText">0 / 12 บท</b></div>
+    <div class="row"><span data-i18n="progressLabel">ความคืบหน้า</span><b id="progText">0 / 12 บท</b></div>
     <div class="bar"><div class="bar-fill" id="progFill" style="width:0%"></div></div>
   </div>
 
@@ -374,7 +422,7 @@
   </div>
 
   <div id="lesson">
-    <button class="backbtn" id="backBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <button class="backbtn" id="backBtn">‹ <span data-i18n="backToRoadmap">กลับไปที่แผนที่เนื้อหา</span></button>
     <div class="lhead">
       <div class="ltag" id="lTag"></div>
       <h2 id="lTitle"></h2>
@@ -411,7 +459,7 @@
   </div>
 
   <div id="examscreen">
-    <button class="backbtn" id="examBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <button class="backbtn" id="examBackBtn">‹ <span data-i18n="backToRoadmap">กลับไปที่แผนที่เนื้อหา</span></button>
     <div class="lhead">
       <div class="ltag" id="examTag"></div>
       <h2 id="examTitle"></h2>
@@ -419,11 +467,11 @@
       <div class="examscore" id="examScore"></div>
     </div>
     <div class="examctrl">
-      <div class="tlabel">🗂️ หมวดหมู่วิชาที่จะสุ่มออกข้อสอบ (แตะเพื่อเลือก/ยกเลิก)</div>
+      <div class="tlabel">🗂️ <span data-i18n="examCatFilterLabel">หมวดหมู่วิชาที่จะสุ่มออกข้อสอบ (แตะเพื่อเลือก/ยกเลิก)</span></div>
       <div class="examcatfilter" id="examCatFilter"></div>
 
       <div class="examsetrow">
-        <div class="esetlabel">🔢 จำนวนข้อ (พิมพ์กำหนดเองได้ 10-300 ข้อ)</div>
+        <div class="esetlabel">🔢 <span data-i18n="examCountLabel">จำนวนข้อ (พิมพ์กำหนดเองได้ 10-300 ข้อ)</span></div>
         <div class="examsetinputs">
           <input type="number" class="examnuminput" id="examCountInput" min="10" max="300" step="5" value="100">
           <div class="examchips" id="examCountChips">
@@ -437,7 +485,7 @@
       </div>
 
       <div class="examsetrow">
-        <div class="esetlabel">⏱️ เวลาสอบ (นาที) — พิมพ์กำหนดเองได้ 5-300 นาที</div>
+        <div class="esetlabel">⏱️ <span data-i18n="examDurLabel">เวลาสอบ (นาที) — พิมพ์กำหนดเองได้ 5-300 นาที</span></div>
         <div class="examsetinputs">
           <input type="number" class="examnuminput" id="examDurInput" min="5" max="300" step="5" value="150">
           <div class="examchips" id="examDurChips">
@@ -452,8 +500,8 @@
       </div>
 
       <div class="examctrlrow" style="margin-top:12px;">
-        <button class="examctrlbtn" id="examShuffleBtn">🔀 สุ่มชุดข้อสอบใหม่</button>
-        <button class="examctrlbtn" id="examTimerBtn">▶ เริ่มจับเวลา</button>
+        <button class="examctrlbtn" id="examShuffleBtn">🔀 <span data-i18n="examShuffleBtn">สุ่มชุดข้อสอบใหม่</span></button>
+        <button class="examctrlbtn" id="examTimerBtn">▶ <span data-i18n="examTimerBtn">เริ่มจับเวลา</span></button>
       </div>
       <div class="examtimerbig" id="examTimerBig">02:30:00</div>
     </div>
@@ -465,11 +513,11 @@
   </div>
 
   <div id="fitnessscreen">
-    <button class="backbtn" id="fitnessBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <button class="backbtn" id="fitnessBackBtn">‹ <span data-i18n="backToRoadmap">กลับไปที่แผนที่เนื้อหา</span></button>
     <div class="lhead">
       <div class="ltag">FITNESS TRAINING</div>
-      <h2>ฝึกสมรรถภาพร่างกาย</h2>
-      <p>สำหรับผู้เตรียมสอบสายปราบปราม (และสายอื่นที่มีสอบร่างกาย) — วิ่ง ดันพื้น ลุกนั่ง</p>
+      <h2 data-i18n="fitnessH2">ฝึกสมรรถภาพร่างกาย</h2>
+      <p data-i18n="fitnessP">สำหรับผู้เตรียมสอบสายปราบปราม (และสายอื่นที่มีสอบร่างกาย) — วิ่ง ดันพื้น ลุกนั่ง</p>
     </div>
 
     <div class="fitwrap">
@@ -503,11 +551,11 @@
   </div>
 
   <div id="dashboardscreen">
-    <button class="backbtn" id="dashboardBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <button class="backbtn" id="dashboardBackBtn">‹ <span data-i18n="backToRoadmap">กลับไปที่แผนที่เนื้อหา</span></button>
     <div class="lhead">
       <div class="ltag">DASHBOARD</div>
-      <h2>สรุปผลรวม & นับถอยหลังวันสอบ</h2>
-      <p>ภาพรวมความคืบหน้าและความแม่นยำของคุณในแต่ละวิชา</p>
+      <h2 data-i18n="dashboardH2">สรุปผลรวม & นับถอยหลังวันสอบ</h2>
+      <p data-i18n="dashboardP">ภาพรวมความคืบหน้าและความแม่นยำของคุณในแต่ละวิชา</p>
     </div>
 
     <div class="dashcard">
@@ -542,11 +590,11 @@
     <div class="fc-card" id="fcCard">
       <div class="fc-text" id="fcText"></div>
     </div>
-    <div class="fc-hint">แตะการ์ดเพื่อดูคำตอบ</div>
+    <div class="fc-hint" data-i18n="fcHint">แตะการ์ดเพื่อดูคำตอบ</div>
     <div class="fc-nav">
-      <button id="fcPrev">‹ ก่อนหน้า</button>
-      <button id="fcFlip" class="primary">พลิกการ์ด</button>
-      <button id="fcNext">ถัดไป ›</button>
+      <button id="fcPrev">‹ <span data-i18n="fcPrev">ก่อนหน้า</span></button>
+      <button id="fcFlip" class="primary" data-i18n="fcFlip">พลิกการ์ด</button>
+      <button id="fcNext"><span data-i18n="fcNext">ถัดไป</span> ›</button>
     </div>
   </div>
 </div>

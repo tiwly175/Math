@@ -219,10 +219,166 @@ function gen_shift_duration() {
   };
 }
 
+// ---------- 13. ส่วนลดราคา (ร้อยละลด) ----------
+function gen_percent_decrease() {
+  const base = randInt(200, 2000) * 10; // multiple of 10
+  const p = pick([5, 10, 15, 20, 25, 30, 40]);
+  const disc = base * p / 100;
+  const after = base - disc;
+  const { choices, correct } = makeChoices(after, [base + disc, after + disc / 2, after - disc / 2],
+    v => `${fmtNum(Math.round(v))} บาท`);
+  return {
+    q: `อุปกรณ์ราคา ${fmtNum(base)} บาท ลดราคา ${p}% ต้องจ่ายเงินกี่บาท`,
+    choices, correct,
+    explain: `ส่วนลด = ${fmtNum(base)}×${p}% = ${fmtNum(disc)} บาท → ราคาที่ต้องจ่าย = ${fmtNum(base)}-${fmtNum(disc)} = ${fmtNum(after)} บาท`
+  };
+}
+
+// ---------- 14. โจทย์อายุ ----------
+function gen_age_problem() {
+  const childAge = randInt(5, 15);
+  const k = randInt(2, 4);
+  const parentAge = childAge * k;
+  const future = randInt(2, 10);
+  const parentFuture = parentAge + future;
+  const childFuture = childAge + future;
+  const { choices, correct } = makeChoices(parentFuture, [parentFuture + future, childFuture * k, parentAge - future > 0 ? parentAge - future : parentAge + future * 2],
+    v => `${fmtNum(v)} ปี`);
+  return {
+    q: `ปัจจุบันหัวหน้างานมีอายุเป็น ${k} เท่าของลูกน้องฝึกหัดที่อายุ ${childAge} ปี อีก ${future} ปีข้างหน้า หัวหน้างานจะอายุกี่ปี`,
+    choices, correct,
+    explain: `ปัจจุบันหัวหน้างานอายุ ${childAge}×${k} = ${parentAge} ปี → อีก ${future} ปี = ${parentAge}+${future} = ${parentFuture} ปี`
+  };
+}
+
+// ---------- 15. กำไร/ขาดทุนร้อยละ ----------
+function gen_profit_loss() {
+  const cost = randInt(50, 500) * 10;
+  const isProfit = Math.random() < 0.5;
+  const p = pick([5, 10, 12, 15, 20, 25]);
+  const diff = cost * p / 100;
+  const sell = isProfit ? cost + diff : cost - diff;
+  const { choices, correct } = makeChoices(p, [p + 5, p - 5 > 0 ? p - 5 : p + 10, Math.round(diff / cost * 1000) / 10 + (isProfit ? 5 : -5)],
+    v => `${v}%`);
+  return {
+    q: `ซื้อของมาราคาทุน ${fmtNum(cost)} บาท นำไปขายที่ราคา ${fmtNum(sell)} บาท ${isProfit ? 'กำไร' : 'ขาดทุน'}คิดเป็นร้อยละเท่าไรของทุน`,
+    choices, correct,
+    explain: `${isProfit ? 'กำไร' : 'ขาดทุน'} = ${fmtNum(Math.abs(sell - cost))} บาท → (${fmtNum(Math.abs(sell - cost))}÷${fmtNum(cost)})×100 = ${p}%`
+  };
+}
+
+// ---------- 16. พื้นที่/เส้นรอบรูปสี่เหลี่ยมผืนผ้า ----------
+function gen_area_rect() {
+  const w = randInt(4, 20);
+  const l = randInt(w + 2, 40);
+  const askArea = Math.random() < 0.5;
+  const area = w * l;
+  const perimeter = 2 * (w + l);
+  const answer = askArea ? area : perimeter;
+  const unitLabel = askArea ? 'ตร.ม.' : 'ม.';
+  const { choices, correct } = makeChoices(answer, [answer + w, answer - w > 0 ? answer - w : answer + l, answer + l],
+    v => `${fmtNum(v)} ${unitLabel}`);
+  return {
+    q: `ที่ดินรูปสี่เหลี่ยมผืนผ้า กว้าง ${w} เมตร ยาว ${l} เมตร มี${askArea ? 'พื้นที่' : 'ความยาวเส้นรอบรูป'}เท่าไร`,
+    choices, correct,
+    explain: askArea ? `พื้นที่ = กว้าง×ยาว = ${w}×${l} = ${area} ตร.ม.` : `เส้นรอบรูป = 2×(กว้าง+ยาว) = 2×(${w}+${l}) = ${perimeter} ม.`
+  };
+}
+
+// ---------- 17. ลำดับกำลังสอง/รูปแบบพิเศษ ----------
+function gen_series_squares() {
+  const start = randInt(1, 6);
+  const terms = [0, 1, 2, 3].map(i => (start + i) * (start + i));
+  const next = (start + 4) * (start + 4);
+  const { choices, correct } = makeChoices(next, [next + 2 * (start + 4) - 1, next - (start + 4), terms[3] + (terms[3] - terms[2])], fmtNum);
+  return {
+    q: `ลำดับต่อไปนี้เกิดจากรูปแบบใดรูปแบบหนึ่ง ${terms.join(', ')}, ... พจน์ถัดไปคือเท่าไร`,
+    choices, correct,
+    explain: `แต่ละพจน์คือ (${start}+n)² เมื่อ n=0,1,2,3,... → พจน์ถัดไป (${start + 4})² = ${next}`
+  };
+}
+
+// ---------- 18. แปลงหน่วยเวลา/ระยะทาง ----------
+function gen_unit_convert() {
+  const kind = pick(['hm', 'ms', 'kmm']);
+  let q, answer, unit, explain;
+  if (kind === 'hm') {
+    const h = randInt(1, 8), m = randInt(1, 59);
+    answer = h * 60 + m; unit = 'นาที';
+    q = `เวลา ${h} ชั่วโมง ${m} นาที คิดเป็นกี่นาที`;
+    explain = `${h}×60+${m} = ${answer} นาที`;
+  } else if (kind === 'ms') {
+    const m = randInt(2, 20);
+    answer = m * 60; unit = 'วินาที';
+    q = `เวลา ${m} นาที คิดเป็นกี่วินาที`;
+    explain = `${m}×60 = ${answer} วินาที`;
+  } else {
+    const km = randInt(1, 20), m2 = randInt(1, 999);
+    answer = km * 1000 + m2; unit = 'เมตร';
+    q = `ระยะทาง ${km} กิโลเมตร ${m2} เมตร คิดเป็นกี่เมตร`;
+    explain = `${km}×1000+${m2} = ${answer} เมตร`;
+  }
+  const { choices, correct } = makeChoices(answer, [answer + 10, answer - 10 > 0 ? answer - 10 : answer + 20, Math.round(answer * 1.1)],
+    v => `${fmtNum(v)} ${unit}`);
+  return { q, choices, correct, explain };
+}
+
+// ---------- 19. จัดเวรยาม/สลับตำแหน่ง (การเรียงสับเปลี่ยนอย่างง่าย) ----------
+function gen_permutation_simple() {
+  const n = randInt(3, 6);
+  function factorial(x) { let r = 1; for (let i = 2; i <= x; i++) r *= i; return r; }
+  const answer = factorial(n);
+  const { choices, correct } = makeChoices(answer, [answer / n, n * n, factorial(n - 1)], fmtNum);
+  return {
+    q: `มีเจ้าหน้าที่ ${n} คน ต้องจัดเข้าเวรเรียงลำดับกันทั้งหมด ${n} ผลัดโดยไม่ซ้ำคนในแต่ละผลัด มีวิธีจัดเรียงได้ทั้งหมดกี่แบบ`,
+    choices, correct,
+    explain: `จำนวนวิธีเรียงสับเปลี่ยนของ ${n} คน = ${n}! = ${Array.from({ length: n }, (_, i) => n - i).join('×')} = ${answer} แบบ`
+  };
+}
+
+// ---------- 20. ความน่าจะเป็นอย่างง่าย (จับสลาก) ----------
+function gen_probability_simple() {
+  const total = randInt(6, 20);
+  const target = randInt(1, total - 1);
+  function g(a, b) { return b === 0 ? a : g(b, a % b); }
+  const d = g(target, total);
+  const num = target / d, den = total / d;
+  const correctStr = `${num}/${den}`;
+  const wrongs = [`${target}/${total}` === correctStr ? `${den}/${num}` : `${target}/${total}`, `${num + 1}/${den}`, `${num}/${den + 1}`];
+  let vals = [correctStr, ...wrongs].filter((v, i, a) => a.indexOf(v) === i);
+  while (vals.length < 4) vals.push(`${num}/${den + vals.length}`);
+  vals = vals.slice(0, 4);
+  for (let i = vals.length - 1; i > 0; i--) { const j = randInt(0, i);[vals[i], vals[j]] = [vals[j], vals[i]]; }
+  const correct = vals.indexOf(correctStr);
+  return {
+    q: `กล่องใบหนึ่งมีสลาก ${total} ใบ เป็นสลากรางวัล ${target} ใบ หยิบสลาก 1 ใบแบบสุ่ม ความน่าจะเป็นที่จะหยิบได้สลากรางวัลคือเท่าไร`,
+    choices: vals, correct,
+    explain: `ความน่าจะเป็น = ${target}/${total} ทำเป็นเศษส่วนอย่างต่ำ (ห.ร.ม.=${d}) = ${num}/${den}`
+  };
+}
+
+// ---------- 21. คะแนนเฉลี่ยถ่วงน้ำหนัก ----------
+function gen_weighted_average() {
+  const n1 = randInt(10, 30), n2 = randInt(10, 30);
+  const avg1 = randInt(50, 90), avg2 = randInt(50, 90);
+  const total = n1 * avg1 + n2 * avg2;
+  const combinedAvg = Math.round(total / (n1 + n2));
+  const { choices, correct } = makeChoices(combinedAvg, [Math.round((avg1 + avg2) / 2), combinedAvg + 3, combinedAvg - 3],
+    v => `${fmtNum(v)} คะแนน`);
+  return {
+    q: `ห้องอบรม A มีผู้เข้าอบรม ${n1} คน คะแนนเฉลี่ย ${avg1} คะแนน ห้อง B มี ${n2} คน คะแนนเฉลี่ย ${avg2} คะแนน คะแนนเฉลี่ยรวมของทั้งสองห้องคือเท่าไร (ปัดเศษ)`,
+    choices, correct,
+    explain: `รวมคะแนน = ${n1}×${avg1}+${n2}×${avg2} = ${total} → เฉลี่ย = ${total}÷(${n1}+${n2}) ≈ ${combinedAvg} คะแนน`
+  };
+}
+
 const MATH_GENERATORS = [
   gen_divide, gen_percent_increase, gen_ratio, gen_average,
   gen_geometric_seq, gen_arithmetic_seq, gen_logic, gen_percent_defect,
-  gen_speed_distance, gen_work_rate, gen_hcf_lcm, gen_shift_duration
+  gen_speed_distance, gen_work_rate, gen_hcf_lcm, gen_shift_duration,
+  gen_percent_decrease, gen_age_problem, gen_profit_loss, gen_area_rect,
+  gen_series_squares, gen_unit_convert, gen_permutation_simple,
+  gen_probability_simple, gen_weighted_average
 ];
 
 // สร้างโจทย์คณิตศาสตร์/เชิงเหตุผลแบบสุ่มจำนวน n ข้อ พยายามไม่ให้ข้อความซ้ำกันภายในชุดเดียวกัน
