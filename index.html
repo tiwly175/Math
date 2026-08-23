@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ติวสอบตำรวจ & คณิตศาสตร์ · All-in-One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#181B1E; --bg-grad:#1F2327; --card:#24282D; --card-in:#14171A;
+    --line:#383E44; --line-soft:#2C3136; --ink:#F4F5F0; --muted:#A7AEB5; --muted-dim:#767D84;
+    --amber:#FFB447; --amber-glow:rgba(255,176,71,.45);
+    --red:#F16A44; --green:#66B586; --blue:#6FADE0; --purple:#AB9EFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Kanit',sans-serif;
+    background:radial-gradient(circle at 15% 0%, var(--bg-grad), var(--bg) 60%);
+    color:var(--ink); min-height:100vh; padding:12px 12px 60px;
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+  header{text-align:center;margin-bottom:14px;}
+  .eyebrow{font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:500;text-transform:uppercase;}
+  h1{font-size:22px;font-weight:700;margin:4px 0 2px;}
+  .sub{font-size:12.5px;color:var(--muted);}
+
+  .progresswrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;}
+  .progresswrap .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .progresswrap .row b{color:var(--amber);font-weight:600;}
+  .bar{height:8px;border-radius:6px;background:var(--line-soft);overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--amber),#ffd08a);border-radius:6px;transition:width .3s;}
+
+  /* ---------- police track picker ---------- */
+  .trackwrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;}
+  .trackwrap .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+  .trackbtns{display:flex;gap:8px;}
+  .trackbtn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:10px;
+    font-family:inherit;font-size:12.5px;font-weight:500;padding:9px 6px;cursor:pointer;text-align:center;}
+  .trackbtn.active{background:rgba(111,173,224,.14);border-color:var(--blue);color:var(--blue);font-weight:600;}
+  .trackbanner{margin-top:9px;font-size:11.5px;color:var(--muted-dim);line-height:1.5;padding-top:9px;border-top:1px dashed var(--line);display:none;}
+  .trackbanner.show{display:block;}
+  .trackbanner b{color:var(--blue);}
+  .examnav{display:flex;gap:8px;margin-top:10px;}
+  .examnavbtn{flex:1;background:var(--card);border:1px solid var(--purple);color:var(--purple);border-radius:10px;
+    font-family:inherit;font-size:11.5px;font-weight:600;padding:9px 6px;cursor:pointer;text-align:center;}
+  .examnavbtn:active{background:rgba(171,158,255,.14);}
+
+  /* ---------- exam category picker ---------- */
+  .examcatwrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;}
+  .examcatwrap .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+  .examcatgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
+  .examcatbtn{background:var(--card);border:1px solid var(--purple);color:var(--purple);border-radius:10px;
+    font-family:inherit;font-size:11px;font-weight:600;padding:10px 4px;cursor:pointer;text-align:center;line-height:1.4;}
+  .examcatbtn:active{background:rgba(171,158,255,.14);}
+  .timedrow{display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px dashed var(--line);}
+  .timedrow label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;}
+  .timedrow input[type="checkbox"]{width:16px;height:16px;accent-color:var(--amber);cursor:pointer;}
+  .examtimer{display:none;font-family:monospace,'Kanit';font-size:13px;font-weight:700;color:var(--amber);
+    background:var(--card-in);border:1px solid var(--amber);border-radius:20px;padding:4px 12px;margin-top:8px;}
+  .examtimer.show{display:inline-block;}
+  .examtimer.warn{color:var(--red);border-color:var(--red);}
+
+  /* ---------- data backup box ---------- */
+  .databox{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;}
+  .databox .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+  .databtns{display:flex;gap:8px;}
+  .databtn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    font-family:inherit;font-size:12px;font-weight:600;padding:10px 6px;cursor:pointer;text-align:center;}
+  .databtn:active{background:var(--card-in);border-color:var(--green);color:var(--green);}
+  .datamsg{font-size:11px;color:var(--muted-dim);margin-top:7px;line-height:1.5;}
+
+  /* ---------- exam screen ---------- */
+  #examscreen{display:none;}
+  #examscreen.active{display:block;}
+  .examscore{margin-top:9px;font-size:12px;color:var(--muted);background:var(--card-in);border:1px solid var(--line);
+    border-radius:10px;padding:8px 12px;}
+  .examscore b{color:var(--amber);}
+  .examq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+  .examq .eqhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;}
+  .examq .eqnum{font-size:10.5px;color:var(--purple);font-weight:600;letter-spacing:.05em;}
+  .examq .eqcat{font-size:10px;font-weight:600;color:var(--blue);background:rgba(111,173,224,.12);border:1px solid rgba(111,173,224,.35);
+    border-radius:20px;padding:2px 9px;white-space:nowrap;}
+  .examq .eqtext{font-size:13.5px;font-weight:500;margin-bottom:11px;line-height:1.55;}
+  .echoice{display:block;width:100%;text-align:left;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
+    border-radius:10px;font-family:inherit;font-size:13px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+  .echoice:last-child{margin-bottom:0;}
+  .echoice.correct{background:rgba(102,181,134,.15);border-color:var(--green);color:var(--green);font-weight:600;}
+  .echoice.wrong{background:rgba(241,106,68,.15);border-color:var(--red);color:var(--red);}
+  .eexplain{margin-top:11px;font-size:12.5px;line-height:1.6;color:var(--muted);padding-top:10px;
+    border-top:1px dashed var(--line);display:none;}
+  .eexplain.show{display:block;}
+
+  .eexplain b{color:var(--amber);}
+
+  /* ---------- roadmap ---------- */
+  #roadmap{display:none;}
+  #roadmap.active{display:block;}
+  .rmap{position:relative;padding-left:34px;}
+  .rmap::before{content:'';position:absolute;left:13px;top:6px;bottom:6px;width:2px;background:var(--line);}
+  .section-label{display:flex;align-items:center;gap:8px;margin:22px 0 10px -34px;padding-left:0;}
+  .section-label .sl-icon{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .section-label .sl-text{font-size:12px;font-weight:600;color:var(--purple);letter-spacing:.02em;}
+  .section-label .sl-sub{font-size:10.5px;color:var(--muted-dim);margin-top:1px;}
+  .node.police .dot{border-color:var(--purple);}
+  .node.police.done .dot{background:var(--green);border-color:var(--green);}
+  .node.police .ntag{background:rgba(171,158,255,.14);color:var(--purple);}
+  .node{position:relative;margin-bottom:12px;cursor:pointer;}
+  .node .dot{position:absolute;left:-34px;top:14px;width:26px;height:26px;border-radius:50%;
+    background:var(--card-in);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;color:var(--muted);z-index:1;}
+  .node.done .dot{background:var(--green);border-color:var(--green);color:#0c1a10;}
+  .node.done .dot::after{content:'✓';}
+  .node.done .dot span{display:none;}
+  .node .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;transition:border-color .15s;}
+  .node:active .card{border-color:var(--amber);}
+  .node.done .card{border-color:rgba(102,181,134,.4);}
+  .ntitle{font-size:14.5px;font-weight:600;margin-bottom:2px;}
+  .nsub{font-size:11.5px;color:var(--muted);line-height:1.4;}
+  .ntag{display:inline-block;margin-top:6px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;
+    background:rgba(255,176,71,.14);color:var(--amber);letter-spacing:.02em;}
+
+  /* ---------- lesson ---------- */
+  #lesson{display:none;}
+  #lesson.active{display:block;}
+  .backbtn{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);color:var(--ink);
+    font-family:inherit;font-size:13.5px;font-weight:600;padding:10px 14px;margin:0 0 12px;cursor:pointer;
+    border-radius:12px;position:sticky;top:10px;z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.35);width:100%;}
+  .backbtn:active{color:var(--amber);border-color:var(--amber);}
+  .lhead{margin-bottom:14px;}
+  .lhead .ltag{font-size:10.5px;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;font-weight:600;}
+  .lhead h2{font-size:20px;font-weight:700;margin:4px 0 4px;}
+  .lhead p{font-size:13px;color:var(--muted);line-height:1.5;margin:0;}
+
+  .block{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:12px;}
+  .block h3{font-size:13.5px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+  .block h3 .ic{font-size:15px;}
+  .explain li{font-size:13.5px;line-height:1.65;color:var(--ink);margin-bottom:7px;}
+  .explain li:last-child{margin-bottom:0;}
+  .explain b{color:var(--amber);font-weight:600;}
+
+  .ex-problem{background:var(--card-in);border:1px solid var(--line);border-radius:10px;padding:10px 13px;
+    font-family:monospace,'Kanit';font-size:16px;font-weight:600;color:var(--amber);margin-bottom:10px;text-align:center;}
+  .step{display:flex;gap:10px;margin-bottom:10px;}
+  .step:last-child{margin-bottom:0;}
+  .step .snum{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--card-in);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--amber);}
+  .step .stxt{font-size:13.5px;line-height:1.55;padding-top:2px;}
+  .step .stxt .calc{display:block;font-family:monospace,'Kanit';color:var(--amber);margin-top:3px;font-size:13px;}
+  .ex-answer{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;
+    align-items:center;font-size:13.5px;font-weight:600;}
+  .ex-answer .v{color:var(--green);font-family:monospace,'Kanit';font-size:15px;}
+
+  .tipbox{background:rgba(255,176,71,.08);border:1px solid rgba(255,176,71,.35);border-radius:12px;padding:12px 14px;margin-bottom:12px;}
+  .tipbox h3{color:var(--amber);}
+  .tipbox p{font-size:13px;line-height:1.6;margin:0;color:var(--ink);}
+  .tipbox p+p{margin-top:6px;}
+
+  .q{border-bottom:1px solid var(--line-soft);padding:12px 0;}
+  .q:first-child{padding-top:0;}
+  .q:last-child{border-bottom:none;padding-bottom:0;}
+  .q-text{font-size:13.5px;margin-bottom:8px;font-weight:500;}
+  .q-row{display:flex;gap:8px;align-items:center;}
+  .q-row input{flex:1;background:var(--card-in);border:1px solid var(--line);border-radius:8px;color:var(--ink);
+    font-family:inherit;font-size:14px;padding:9px 11px;}
+  .q-row input:focus{outline:2px solid var(--amber);outline-offset:1px;}
+  .q-row button{flex-shrink:0;background:var(--amber);color:#1a1400;border:none;border-radius:8px;
+    font-family:inherit;font-weight:600;font-size:12.5px;padding:9px 13px;cursor:pointer;}
+  .q-fb{margin-top:7px;font-size:12.5px;line-height:1.5;padding:8px 10px;border-radius:8px;display:none;}
+  .q-fb.ok{display:block;background:rgba(102,181,134,.13);color:var(--green);border:1px solid rgba(102,181,134,.35);}
+  .q-fb.no{display:block;background:rgba(241,106,68,.13);color:var(--red);border:1px solid rgba(241,106,68,.35);}
+  .q-hintbtn{background:none;border:none;color:var(--blue);font-family:inherit;font-size:11.5px;font-weight:600;
+    padding:6px 0 0;cursor:pointer;display:flex;align-items:center;gap:4px;}
+  .q-hintbtn:active{opacity:.7;}
+  .q-hintbox{margin-top:6px;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:8px;display:none;
+    background:rgba(111,173,224,.1);color:var(--blue);border:1px dashed rgba(111,173,224,.4);}
+  .q-hintbox.show{display:block;}
+
+  .donebtn{width:100%;background:var(--green);color:#0c1a10;border:none;border-radius:12px;font-family:inherit;
+    font-weight:600;font-size:14px;padding:13px;cursor:pointer;margin-top:4px;}
+  .donebtn.isdone{background:var(--card-in);color:var(--muted);border:1px solid var(--line);}
+  .donebtn:active{transform:scale(.98);}
+
+  .navrow{display:flex;gap:8px;margin-top:10px;}
+  .navrow button{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    font-family:inherit;font-size:12.5px;padding:10px;cursor:pointer;}
+  .navrow button:disabled{opacity:.35;}
+
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);
+    border:1px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:20px;font-size:12.5px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:.25s;pointer-events:none;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- subject tabs ---------- */
+  .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
+  .tab{flex:1;min-width:74px;background:var(--card-in);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:10px 5px;cursor:pointer;font-family:inherit;font-weight:600;font-size:12px;text-align:center;}
+  .tab.active{background:var(--amber);color:#1a1400;border-color:var(--amber);}
+
+  /* ---------- tool buttons ---------- */
+  .tool-btns{display:flex;gap:8px;margin-bottom:12px;}
+  .tool-btn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;padding:10px 5px;cursor:pointer;}
+  .tool-btn:active{background:var(--card-in);border-color:var(--amber);color:var(--amber);}
+
+  /* ---------- safety box ---------- */
+  .safetybox{background:rgba(255,176,71,.08);border:1px solid var(--amber);border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.7;}
+  .safetybox .stitle{font-weight:700;color:var(--amber);margin-bottom:4px;}
+  .safetybox ul{margin:0;padding-left:20px;color:var(--muted);}
+  .safetybox strong{color:var(--ink);}
+  .safetybox code{background:#1F2327;padding:1px 6px;border-radius:4px;}
+
+  /* ---------- flashcard modal ---------- */
+  .fc-overlay{position:fixed;inset:0;background:rgba(10,11,13,.72);display:none;align-items:center;justify-content:center;z-index:80;padding:16px;}
+  .fc-overlay.show{display:flex;}
+  .fc-modal{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .fc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .fc-head span{font-size:11.5px;color:var(--muted);}
+  .fc-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;}
+  .fc-card{min-height:190px;background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:20px;
+    display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;margin-bottom:14px;}
+  .fc-card .fc-label{position:absolute;margin-top:-92px;font-size:10px;letter-spacing:.1em;color:var(--muted-dim);text-transform:uppercase;}
+  .fc-card .fc-text{font-size:15.5px;line-height:1.6;font-weight:500;}
+  .fc-card.flipped .fc-text{color:var(--green);}
+  .fc-hint{text-align:center;font-size:11px;color:var(--muted-dim);margin:-8px 0 14px;}
+  .fc-nav{display:flex;gap:8px;}
+  .fc-nav button{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    font-family:inherit;font-size:12.5px;font-weight:600;padding:11px;cursor:pointer;}
+  .fc-nav button:disabled{opacity:.35;}
+  .fc-nav button.primary{background:var(--amber);color:#1a1400;border-color:var(--amber);}
+
+  /* ---------- exam controls (timer + shuffle) ---------- */
+  .examctrl{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;}
+  .examctrl .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+  .examctrlrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .examctrlbtn{flex:1;min-width:100px;background:var(--card);border:1px solid var(--purple);color:var(--purple);border-radius:10px;
+    font-family:inherit;font-size:12px;font-weight:600;padding:9px 8px;cursor:pointer;text-align:center;}
+  .examctrlbtn:active{background:rgba(171,158,255,.14);}
+  .examctrlbtn.on{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .examdursel{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    font-family:inherit;font-size:12px;padding:9px 8px;}
+  .examcatfilter{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px;}
+  .examcatchip{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:20px;
+    font-family:inherit;font-size:11px;font-weight:600;padding:7px 12px;cursor:pointer;}
+  .examcatchip.active{background:rgba(111,173,224,.14);border-color:var(--blue);color:var(--blue);}
+  .examsetrow{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
+  .examsetrow .esetlabel{font-size:11.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+  .examsetinputs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .examnuminput{width:78px;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    font-family:inherit;font-size:14px;font-weight:600;padding:8px 10px;text-align:center;}
+  .examchips{display:flex;gap:6px;flex-wrap:wrap;}
+  .examchips button{background:var(--card-in);border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-family:inherit;font-size:11px;font-weight:600;padding:7px 9px;cursor:pointer;}
+  .examchips button:active{border-color:var(--amber);color:var(--amber);}
+  .examtimehint{font-size:11px;color:var(--muted-dim);line-height:1.6;margin-top:8px;}
+  .examtimehint b{color:var(--amber);}
+  .examtimehint button{background:none;border:1px solid var(--amber);color:var(--amber);border-radius:20px;
+    font-family:inherit;font-size:10.5px;font-weight:600;padding:2px 9px;cursor:pointer;margin:0 2px;}
+  .examtimehint .hintcaveat{display:block;margin-top:3px;color:var(--muted-dim);}
+  .examtimerbig{display:none;text-align:center;font-family:monospace,'Kanit';font-size:26px;font-weight:700;
+    color:var(--amber);background:var(--card);border:1px solid var(--amber);border-radius:12px;padding:8px;margin-top:10px;}
+  .examtimerbig.show{display:block;}
+  .examtimerbig.warn{color:var(--red);border-color:var(--red);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  .examdone{display:none;background:rgba(102,181,134,.1);border:1px solid var(--green);border-radius:12px;
+    padding:12px 14px;margin-bottom:12px;text-align:center;}
+  .examdone.show{display:block;}
+  .examdone .edscore{font-size:24px;font-weight:700;color:var(--green);}
+  .examdone .edlabel{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  /* ---------- fitness screen ---------- */
+  #fitnessscreen{display:none;}
+  #fitnessscreen.active{display:block;}
+  .fitwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+  .fitwrap h3{font-size:13.5px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+  .fitcriteria{width:100%;border-collapse:collapse;font-size:12px;}
+  .fitcriteria th,.fitcriteria td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line-soft);}
+  .fitcriteria th{color:var(--muted);font-weight:600;font-size:11px;}
+  .fitcriteria td:first-child,.fitcriteria th:first-child{text-align:left;}
+  .fitcriteria .fitgood{color:var(--green);font-weight:600;}
+  .fitnote{font-size:11px;color:var(--muted-dim);margin-top:8px;line-height:1.6;}
+  .fitweek{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
+  .fitweek:last-child{border-bottom:none;}
+  .fitweek .fwname{font-weight:600;color:var(--ink);}
+  .fitweek .fwtarget{color:var(--muted);font-size:11.5px;text-align:right;}
+  .swbox{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;}
+  .swdisplay{font-family:monospace,'Kanit';font-size:40px;font-weight:700;color:var(--amber);margin-bottom:14px;letter-spacing:.02em;}
+  .swbtns{display:flex;gap:8px;}
+  .swbtns button{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+    font-family:inherit;font-size:13px;font-weight:600;padding:12px;cursor:pointer;}
+  .swbtns button.swstart{background:var(--green);color:#0c1a10;border-color:var(--green);}
+  .swbtns button.swstop{background:var(--red);color:#2a0e06;border-color:var(--red);}
+  .swlaps{margin-top:12px;max-height:120px;overflow-y:auto;text-align:left;}
+  .swlaps .swlap{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:5px 8px;
+    border-bottom:1px solid var(--line-soft);font-family:monospace,'Kanit';}
+
+  /* ---------- dashboard screen ---------- */
+  #dashboardscreen{display:none;}
+  #dashboardscreen.active{display:block;}
+  .dashcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+  .dashcard h3{font-size:13.5px;font-weight:600;margin:0 0 12px;display:flex;align-items:center;gap:7px;}
+  .dashrow{margin-bottom:11px;}
+  .dashrow:last-child{margin-bottom:0;}
+  .dashrow .drtop{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;}
+  .dashrow .drtop b{color:var(--ink);font-weight:600;}
+  .dashrow .drtop span{color:var(--muted-dim);font-family:monospace,'Kanit';}
+  .dashbar{height:7px;border-radius:5px;background:var(--line-soft);overflow:hidden;}
+  .dashbar .dashbar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),#9fd0f0);}
+  .dashbar .dashbar-fill.amber{background:linear-gradient(90deg,var(--amber),#ffd08a);}
+  .dashempty{font-size:12px;color:var(--muted-dim);text-align:center;padding:10px 0;}
+  .countdownwrap{text-align:center;padding:6px 0;}
+  .countdownnum{font-size:42px;font-weight:700;color:var(--amber);line-height:1;}
+  .countdownlabel{font-size:12px;color:var(--muted);margin-top:4px;}
+  .countdownset{display:flex;gap:8px;margin-top:12px;}
+  .countdownset input{flex:1;background:var(--card-in);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+    font-family:inherit;font-size:13px;padding:9px 10px;}
+  .countdownset button{background:var(--amber);color:#1a1400;border:none;border-radius:10px;font-family:inherit;
+    font-weight:600;font-size:12.5px;padding:9px 14px;cursor:pointer;}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">POLICE EXAM · FROM ZERO</div>
+    <h1>ติวสอบตำรวจ & คณิตศาสตร์</h1>
+    <div class="sub">เรียงเนื้อหาจากพื้นฐานที่สุด ไปทีละขั้น ครบทุกวิชาที่ใช้สอบ</div>
+  </header>
+
+  <div class="tabs" id="subjectTabs">
+    <button class="tab active" onclick="switchSubject('math', this)">📐 คณิต</button>
+    <button class="tab" onclick="switchSubject('thai', this)">📖 ไทย</button>
+    <button class="tab" onclick="switchSubject('eng', this)">🔤 อังกฤษ</button>
+    <button class="tab" onclick="switchSubject('law', this)">⚖️ กฎหมาย</button>
+    <button class="tab" onclick="switchSubject('social', this)">🌏 สังคม</button>
+  </div>
+
+  <div class="tool-btns">
+    <button class="tool-btn" onclick="openFlashcards()">🎴 ทบทวนบทเรียน (Flashcards)</button>
+    <button class="tool-btn" onclick="openFitnessScreen()">🏃 ฝึกร่างกาย</button>
+    <button class="tool-btn" onclick="openDashboardScreen()">📊 สรุปผล/นับถอยหลัง</button>
+  </div>
+
+  <div class="safetybox">
+    <div class="stitle">⚠️ ความปลอดภัย (อ่านก่อนใช้งาน)</div>
+    <ul>
+      <li>แอปพลิเคชันนี้ <strong>ทำงานออฟไลน์ 100%</strong> (หลังโหลดครั้งแรก)</li>
+      <li><strong>ไม่มีการเก็บข้อมูลส่วนตัว</strong> เช่น ชื่อ อีเมล หรือ IP Address และ<strong>ไม่มีสคริปต์ติดตาม (analytics) ใดๆ ทั้งสิ้น</strong></li>
+      <li>ข้อมูลความคืบหน้าจะถูกบันทึกไว้ใน <strong>Local Storage ของเบราว์เซอร์ของคุณเท่านั้น</strong></li>
+      <li>ไม่มีระบบส่งข้อมูลไปยังเซิร์ฟเวอร์ใดๆ ทั้งสิ้น (ดูได้จาก Source Code ว่าไม่มีคำสั่ง <code>fetch</code> หรือ <code>XMLHttpRequest</code>)</li>
+      <li>เปิดได้ทุกเบราว์เซอร์ ไม่ต้องติดตั้งซอฟต์แวร์เพิ่ม</li>
+    </ul>
+  </div>
+
+  <div class="trackwrap">
+    <div class="tlabel">🎯 เลือกสายที่จะสอบ (สำหรับติวตำรวจบทพิเศษและคลังข้อสอบด้านล่าง)</div>
+    <div class="trackbtns">
+      <button class="trackbtn" id="trackAdmin" data-track="อำนวยการ">สายอำนวยการ</button>
+      <button class="trackbtn" id="trackCrime" data-track="ปราบปราม">สายปราบปราม</button>
+    </div>
+    <div class="trackbanner" id="trackBanner"></div>
+    <div class="examnav">
+      <button class="examnavbtn" id="goExamAdmin">📝 คลังข้อสอบสายอำนวยการ</button>
+      <button class="examnavbtn" id="goExamCrime">📝 คลังข้อสอบสายปราบปราม</button>
+    </div>
+  </div>
+
+  <div class="progresswrap">
+    <div class="row"><span>ความคืบหน้า</span><b id="progText">0 / 12 บท</b></div>
+    <div class="bar"><div class="bar-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <div id="roadmap" class="active">
+    <div class="rmap" id="rmapList"></div>
+  </div>
+
+  <div id="lesson">
+    <button class="backbtn" id="backBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <div class="lhead">
+      <div class="ltag" id="lTag"></div>
+      <h2 id="lTitle"></h2>
+      <p id="lSub"></p>
+    </div>
+
+    <div class="block">
+      <h3><span class="ic">📘</span>หลักการ</h3>
+      <ul class="explain" id="lExplain"></ul>
+    </div>
+
+    <div class="block">
+      <h3><span class="ic">✏️</span>ตัวอย่างเดินทีละขั้น</h3>
+      <div class="ex-problem" id="exProblem"></div>
+      <div id="exSteps"></div>
+      <div class="ex-answer"><span>คำตอบ</span><span class="v" id="exAnswer"></span></div>
+    </div>
+
+    <div class="tipbox">
+      <h3><span class="ic">⚡</span>เทคนิคลัด</h3>
+      <div id="lTip"></div>
+    </div>
+
+    <div class="block">
+      <h3><span class="ic">🧩</span>แบบฝึกหัด</h3>
+      <div id="lPractice"></div>
+    </div>
+
+    <button class="donebtn" id="doneBtn">✓ ทำเครื่องหมายว่าเรียนจบบทนี้</button>
+    <div class="navrow">
+      <button id="prevBtn">‹ บทก่อนหน้า</button>
+      <button id="nextBtn">บทถัดไป ›</button>
+    </div>
+  </div>
+
+  <div id="examscreen">
+    <button class="backbtn" id="examBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <div class="lhead">
+      <div class="ltag" id="examTag"></div>
+      <h2 id="examTitle"></h2>
+      <p id="examSub"></p>
+      <div class="examscore" id="examScore"></div>
+    </div>
+    <div class="examctrl">
+      <div class="tlabel">🗂️ หมวดหมู่วิชาที่จะสุ่มออกข้อสอบ (แตะเพื่อเลือก/ยกเลิก)</div>
+      <div class="examcatfilter" id="examCatFilter"></div>
+
+      <div class="examsetrow">
+        <div class="esetlabel">🔢 จำนวนข้อ (พิมพ์กำหนดเองได้ 10-300 ข้อ)</div>
+        <div class="examsetinputs">
+          <input type="number" class="examnuminput" id="examCountInput" min="10" max="300" step="5" value="100">
+          <div class="examchips" id="examCountChips">
+            <button type="button" data-v="50">50</button>
+            <button type="button" data-v="100">100</button>
+            <button type="button" data-v="120">120</button>
+            <button type="button" data-v="150">150</button>
+            <button type="button" data-v="200">200</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="examsetrow">
+        <div class="esetlabel">⏱️ เวลาสอบ (นาที) — พิมพ์กำหนดเองได้ 5-300 นาที</div>
+        <div class="examsetinputs">
+          <input type="number" class="examnuminput" id="examDurInput" min="5" max="300" step="5" value="150">
+          <div class="examchips" id="examDurChips">
+            <button type="button" data-v="60">60</button>
+            <button type="button" data-v="90">90</button>
+            <button type="button" data-v="120">120</button>
+            <button type="button" data-v="150">150</button>
+            <button type="button" data-v="180">180</button>
+          </div>
+        </div>
+        <div class="examtimehint" id="examTimeHint"></div>
+      </div>
+
+      <div class="examctrlrow" style="margin-top:12px;">
+        <button class="examctrlbtn" id="examShuffleBtn">🔀 สุ่มชุดข้อสอบใหม่</button>
+        <button class="examctrlbtn" id="examTimerBtn">▶ เริ่มจับเวลา</button>
+      </div>
+      <div class="examtimerbig" id="examTimerBig">02:30:00</div>
+    </div>
+    <div class="examdone" id="examDone">
+      <div class="edscore" id="edScoreText"></div>
+      <div class="edlabel" id="edLabelText"></div>
+    </div>
+    <div id="examList"></div>
+  </div>
+
+  <div id="fitnessscreen">
+    <button class="backbtn" id="fitnessBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <div class="lhead">
+      <div class="ltag">FITNESS TRAINING</div>
+      <h2>ฝึกสมรรถภาพร่างกาย</h2>
+      <p>สำหรับผู้เตรียมสอบสายปราบปราม (และสายอื่นที่มีสอบร่างกาย) — วิ่ง ดันพื้น ลุกนั่ง</p>
+    </div>
+
+    <div class="fitwrap">
+      <h3><span class="ic">📋</span>เกณฑ์คะแนนโดยประมาณ (ชาย)</h3>
+      <table class="fitcriteria">
+        <tr><th>รายการ</th><th>ผ่าน</th><th>ดี</th><th class="fitgood">ดีมาก</th></tr>
+        <tr><td>วิ่ง 1,000 ม.</td><td>≤ 4:30</td><td>≤ 4:00</td><td class="fitgood">≤ 3:30</td></tr>
+        <tr><td>ดันพื้น (1 นาที)</td><td>≥ 22 ครั้ง</td><td>≥ 32 ครั้ง</td><td class="fitgood">≥ 42 ครั้ง</td></tr>
+        <tr><td>ลุกนั่ง (1 นาที)</td><td>≥ 25 ครั้ง</td><td>≥ 35 ครั้ง</td><td class="fitgood">≥ 45 ครั้ง</td></tr>
+      </table>
+      <div class="fitnote">⚠️ ตัวเลขนี้เป็น <b>ค่าประมาณสำหรับฝึกซ้อมเท่านั้น</b> เกณฑ์จริงเปลี่ยนแปลงได้ทุกปีตามประกาศรับสมัครของสำนักงานตำรวจแห่งชาติ กรุณาตรวจสอบเกณฑ์จริงจากประกาศรับสมัครก่อนสอบเสมอ</div>
+    </div>
+
+    <div class="fitwrap">
+      <h3><span class="ic">📅</span>ตารางฝึกซ้อม 8 สัปดาห์</h3>
+      <div id="fitScheduleList"></div>
+    </div>
+
+    <div class="fitwrap">
+      <h3><span class="ic">⏱️</span>ตัวจับเวลา (Stopwatch)</h3>
+      <div class="swbox">
+        <div class="swdisplay" id="swDisplay">00:00.0</div>
+        <div class="swbtns">
+          <button class="swstart" id="swStartBtn">เริ่ม</button>
+          <button id="swLapBtn">จับรอบ (Lap)</button>
+          <button class="swstop" id="swResetBtn">รีเซ็ต</button>
+        </div>
+        <div class="swlaps" id="swLaps"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboardscreen">
+    <button class="backbtn" id="dashboardBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <div class="lhead">
+      <div class="ltag">DASHBOARD</div>
+      <h2>สรุปผลรวม & นับถอยหลังวันสอบ</h2>
+      <p>ภาพรวมความคืบหน้าและความแม่นยำของคุณในแต่ละวิชา</p>
+    </div>
+
+    <div class="dashcard">
+      <h3><span class="ic">📆</span>นับถอยหลังวันสอบ</h3>
+      <div class="countdownwrap" id="countdownWrap">
+        <div class="dashempty">ยังไม่ได้ตั้งวันสอบ</div>
+      </div>
+      <div class="countdownset">
+        <input type="date" id="examDateInput">
+        <button id="examDateSaveBtn">บันทึกวันสอบ</button>
+      </div>
+    </div>
+
+    <div class="dashcard">
+      <h3><span class="ic">📘</span>ความคืบหน้าบทเรียนแยกวิชา</h3>
+      <div id="dashLessonProgress"></div>
+    </div>
+
+    <div class="dashcard">
+      <h3><span class="ic">🎯</span>ความแม่นยำคลังข้อสอบ (ครั้งล่าสุด)</h3>
+      <div id="dashExamAccuracy"></div>
+    </div>
+  </div>
+</div>
+
+<div class="fc-overlay" id="fcOverlay">
+  <div class="fc-modal">
+    <div class="fc-head">
+      <span id="fcCount">การ์ด 1/1</span>
+      <button class="fc-close" id="fcClose">✕</button>
+    </div>
+    <div class="fc-card" id="fcCard">
+      <div class="fc-text" id="fcText"></div>
+    </div>
+    <div class="fc-hint">แตะการ์ดเพื่อดูคำตอบ</div>
+    <div class="fc-nav">
+      <button id="fcPrev">‹ ก่อนหน้า</button>
+      <button id="fcFlip" class="primary">พลิกการ์ด</button>
+      <button id="fcNext">ถัดไป ›</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="exam-data.js"></script>
+<script src="exam-generators.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
