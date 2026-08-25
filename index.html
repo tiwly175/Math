@@ -37,12 +37,21 @@
     --red:#C6482A; --green:#3F8F5F; --blue:#2E76B5; --purple:#6E5DC6;
   }
   *{box-sizing:border-box;}
+  /* ---------- ป้องกันจอขาวกระพริบตอนเลื่อนเร็ว/เด้งขอบ (iOS rubber-band / Android overscroll glow) ----------
+     ถ้าไม่ตั้ง background ให้ <html> เบราว์เซอร์จะโชว์พื้นขาวเริ่มต้นให้เห็นแวบ ๆ ตรงขอบตอนเด้งกลับ
+     overscroll-behavior-y ช่วยตัดพฤติกรรมเด้ง/รีเฟรชที่ลากเนื้อหาหลุดจากพื้นหลังที่ทาสีไว้ ---------- */
+  html{
+    background:var(--bg);
+    height:100%;
+    overscroll-behavior-y:none;
+  }
   body{
     margin:0;
     font-family:'Kanit',sans-serif;
     background:radial-gradient(circle at 15% 0%, var(--bg-grad), var(--bg) 60%);
     color:var(--ink); min-height:100vh; padding:12px 12px calc(78px + env(safe-area-inset-bottom));
     transition:background-color .2s, color .2s;
+    overscroll-behavior-y:none;
   }
   /* หมายเหตุ: ใส่ filter (ปรับความสว่าง) ไว้ที่ .wrap แทน body โดยตั้งใจ —
      เพราะ CSS filter บนบรรพบุรุษจะสร้าง containing block ใหม่ ทำให้ position:fixed
