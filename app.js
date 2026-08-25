@@ -2,6 +2,27 @@
 
 const $ = id => document.getElementById(id);
 
+/* ============== ตัวสลับหน้าจอกลาง (ใช้ร่วมกับแถบเมนูล่างแบบแอป) ============== */
+const ALL_SCREENS = ['roadmap','lesson','examscreen','fitnessscreen','dashboardscreen','vocabScreen','storescreen'];
+const SCREEN_NAV_MAP = { roadmap:'roadmap', lesson:'roadmap', examscreen:'exam', fitnessscreen:'fitness', dashboardscreen:'home', vocabScreen:'roadmap', storescreen:'store' };
+function showScreen(id){
+  ALL_SCREENS.forEach(s=>{ const el = $(s); if(el) el.classList.toggle('active', s===id); });
+  const navKey = SCREEN_NAV_MAP[id];
+  document.querySelectorAll('#bottomNav .navbtn').forEach(b=> b.classList.toggle('active', b.dataset.nav===navKey));
+  const extras = $('roadmapExtras');
+  if(extras) extras.classList.toggle('hide', id !== 'roadmap');
+  if(typeof renderExamDatePill === 'function') renderExamDatePill();
+  window.scrollTo({top:0, behavior:'instant'});
+}
+function goRoadmapTab(){
+  stopExamTimer(); stopStopwatch(); if(typeof stopVocabTimer==='function') stopVocabTimer();
+  renderRoadmap();
+  showScreen('roadmap');
+}
+function goExamTab(){
+  openExamScreen(loadTrackPref() || 'อำนวยการ');
+}
+
 /* ============== theme switcher (กลางคืน/มืด/กลางวัน) ============== */
 const THEME_KEY = 'appThemePref';
 function loadThemePref(){ return localStorage.getItem(THEME_KEY) || 'dark'; }
@@ -366,21 +387,13 @@ function openExamScreen(track, presetCats){
   renderExamScreen(track, buildExamQuestions(track, getExamCount(), currentExamCats));
   updateExamTimeHint();
   resetExamTimerUI();
-  $('roadmap').classList.remove('active');
-  $('lesson').classList.remove('active');
-  $('dashboardscreen').classList.remove('active');
-  $('fitnessscreen').classList.remove('active');
-  if($('vocabScreen')) $('vocabScreen').classList.remove('active');
-  $('examscreen').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  showScreen('examscreen');
 }
 $('goExamAdmin').addEventListener('click', ()=> openExamScreen('อำนวยการ'));
 $('goExamCrime').addEventListener('click', ()=> openExamScreen('ปราบปราม'));
 $('examBackBtn').addEventListener('click', ()=>{
   stopExamTimer();
-  $('examscreen').classList.remove('active');
-  $('roadmap').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  goRoadmapTab();
 });
 $('examShuffleBtn').addEventListener('click', ()=>{
   rebuildExamFromControls('สุ่มชุดข้อสอบใหม่แล้ว ไม่ซ้ำชุดเดิม 🔀');
@@ -578,16 +591,12 @@ function openLesson(idx){
   $('prevBtn').disabled = idx===0;
   $('nextBtn').disabled = idx===getCurrentTopics().length-1;
 
-  $('roadmap').classList.remove('active');
-  $('lesson').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  showScreen('lesson');
 }
 
 function closeLesson(){
-  $('lesson').classList.remove('active');
-  $('roadmap').classList.add('active');
   renderRoadmap();
-  window.scrollTo({top:0, behavior:'instant'});
+  showScreen('roadmap');
 }
 
 /* ---------- ระบบสลับวิชา ---------- */
@@ -672,19 +681,12 @@ function renderFitSchedule(){
 }
 function openFitnessScreen(){
   renderFitSchedule();
-  $('roadmap').classList.remove('active');
-  $('lesson').classList.remove('active');
-  $('examscreen').classList.remove('active');
-  $('dashboardscreen').classList.remove('active');
-  if($('vocabScreen')) $('vocabScreen').classList.remove('active');
-  $('fitnessscreen').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  renderFitChecklist();
+  showScreen('fitnessscreen');
 }
 $('fitnessBackBtn').addEventListener('click', ()=>{
   stopStopwatch();
-  $('fitnessscreen').classList.remove('active');
-  $('roadmap').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  goRoadmapTab();
 });
 
 /* ---------- stopwatch ---------- */
@@ -748,19 +750,9 @@ $('swLapBtn').addEventListener('click', ()=>{
 const EXAM_DATE_KEY = 'policeExamDate';
 function openDashboardScreen(){
   renderDashboard();
-  $('roadmap').classList.remove('active');
-  $('lesson').classList.remove('active');
-  $('examscreen').classList.remove('active');
-  $('fitnessscreen').classList.remove('active');
-  if($('vocabScreen')) $('vocabScreen').classList.remove('active');
-  $('dashboardscreen').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  showScreen('dashboardscreen');
 }
-$('dashboardBackBtn').addEventListener('click', ()=>{
-  $('dashboardscreen').classList.remove('active');
-  $('roadmap').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
-});
+$('dashboardBackBtn').addEventListener('click', goRoadmapTab);
 function renderCountdown(){
   const savedDate = localStorage.getItem(EXAM_DATE_KEY);
   const wrap = $('countdownWrap');
@@ -786,6 +778,7 @@ $('examDateSaveBtn').addEventListener('click', ()=>{
   if(!val){ showToast('กรุณาเลือกวันที่ก่อน'); return; }
   localStorage.setItem(EXAM_DATE_KEY, val);
   renderCountdown();
+  renderExamDatePill();
   showToast('บันทึกวันสอบแล้ว 📆');
 });
 function renderDashLessonProgress(){
@@ -833,7 +826,7 @@ function renderDashboard(){
    ทำงานฝั่ง client ล้วนๆ ไม่มีการส่งข้อมูลออกไปที่ไหนทั้งสิ้น */
 const BACKUP_KEYS = [
   STORAGE_KEY, EXAM_RESULT_KEY, EXAM_DATE_KEY, TRACK_KEY,
-  THEME_KEY, BRIGHT_KEY, LANG_KEY
+  THEME_KEY, BRIGHT_KEY, LANG_KEY, 'fitnessTestResults'
 ];
 function exportBackup(){
   const payload = { app:'ติวสอบตำรวจ & คณิตศาสตร์', exportedAt: new Date().toISOString(), data:{} };
@@ -1250,23 +1243,190 @@ function finishVocabRound(){
 function openVocabGame(){
   renderVocabBest();
   newVocabRound();
-  $('roadmap').classList.remove('active');
-  $('lesson').classList.remove('active');
-  $('examscreen').classList.remove('active');
-  $('fitnessscreen').classList.remove('active');
-  $('dashboardscreen').classList.remove('active');
-  $('vocabScreen').classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
+  showScreen('vocabScreen');
 }
 if($('vocabBackBtn')){
   $('vocabBackBtn').addEventListener('click', ()=>{
     stopVocabTimer();
-    $('vocabScreen').classList.remove('active');
-    $('roadmap').classList.add('active');
-    window.scrollTo({top:0, behavior:'instant'});
+    goRoadmapTab();
   });
 }
 if($('vocabShuffleBtn')) $('vocabShuffleBtn').addEventListener('click', ()=> newVocabRound());
 
+/* ============== ร้านค้า / เอกสารแนะนำ ==============
+   แก้ไขรายการนี้ได้เลย: ใส่ลิงก์ไฟล์ PDF จริงของคุณที่ href (เช่น อัปโหลดขึ้น Google Drive แบบเปิดสาธารณะ,
+   GitHub raw link, หรือใส่ path ไฟล์ในโปรเจกต์เช่น "files/exam-admin-1.pdf") ตอนนี้เป็นตัวอย่างโครงสร้างไว้ก่อน */
+const STORE_ITEMS = [
+  {
+    title:'ข้อสอบปราบปราม ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📘',
+    files:[
+      {label:'ตัวข้อสอบ', ext:'PDF', href:'#'},
+      {label:'กระดาษคำตอบ', ext:'PDF', href:'#'},
+      {label:'เฉลยละเอียด', ext:'PDF', href:'#'}
+    ]
+  },
+  {
+    title:'ข้อสอบอำนวยการ ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📗',
+    files:[
+      {label:'ตัวข้อสอบ', ext:'PDF', href:'#'},
+      {label:'กระดาษคำตอบ', ext:'PDF', href:'#'},
+      {label:'เฉลยละเอียด', ext:'PDF', href:'#'}
+    ]
+  }
+];
+function renderStoreList(){
+  const list = $('storeList');
+  if(!list) return;
+  if(!STORE_ITEMS.length){ list.innerHTML = '<div class="dashempty">ยังไม่มีเอกสารในขณะนี้</div>'; return; }
+  const extColor = {PDF:'#C6482A', DOC:'#2E76B5', XLS:'#3F8F5F'};
+  list.innerHTML = STORE_ITEMS.map(item=>`
+    <div class="store-card">
+      <div class="store-top">
+        <div class="store-thumb">${item.icon||'📄'}</div>
+        <div class="store-info">
+          <span class="store-badge${item.badge && item.badge!=='ฟรี!' ? ' paid':''}">${item.badge||'ฟรี!'}</span>
+          <div class="store-title">${item.title}</div>
+        </div>
+      </div>
+      <div class="store-files">
+        ${item.files.map(f=>`<a class="store-file" href="${f.href}" target="_blank" rel="noopener" onclick="${f.href==='#' ? "event.preventDefault();showToast('ยังไม่ได้แนบไฟล์นี้ — ใส่ลิงก์ที่ STORE_ITEMS ใน app.js');" : ''}">
+          <span class="sf-ic" style="background:${extColor[f.ext]||'#767D84'}">${f.ext}</span>
+          <span class="sf-name">${f.label}</span>
+          <span class="sf-dl">⬇</span>
+        </a>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+function openStoreScreen(){
+  renderStoreList();
+  showScreen('storescreen');
+}
+if($('storeBackBtn')) $('storeBackBtn').addEventListener('click', goRoadmapTab);
+
+/* ============== ฝึกพละ: เช็คลิสต์ผ่าน/ไม่ผ่านรายท่า ==============
+   ใช้เกณฑ์ชุดเดียวกับตารางเกณฑ์คะแนนด้านบน (ผ่าน/ดี/ดีมาก) ผู้ใช้กรอกผลที่ทำได้ล่าสุด
+   ระบบจะบอกว่าอยู่ระดับไหน และคำนวณ % ความพร้อมโดยรวม (ผ่านเกณฑ์กี่ท่าจากทั้งหมด) */
+const FIT_TESTS = [
+  {id:'run1000', name:'วิ่ง 1,000 เมตร', unit:'วินาที', hint:'กรอกเวลาที่ทำได้ (วินาที) เช่น 4:30 = 270', better:'lower', tiers:{pass:270, good:240, great:210}, fmt:'time'},
+  {id:'pushup', name:'ดันพื้น (1 นาที)', unit:'ครั้ง', hint:'จำนวนครั้งที่ทำได้ใน 1 นาที', better:'higher', tiers:{pass:22, good:32, great:42}, fmt:'num'},
+  {id:'situp', name:'ลุกนั่ง (1 นาที)', unit:'ครั้ง', hint:'จำนวนครั้งที่ทำได้ใน 1 นาที', better:'higher', tiers:{pass:25, good:35, great:45}, fmt:'num'}
+];
+const FIT_RESULT_KEY = 'fitnessTestResults';
+function loadFitResults(){ try{ return JSON.parse(localStorage.getItem(FIT_RESULT_KEY)) || {}; }catch(e){ return {}; } }
+function saveFitResults(r){ localStorage.setItem(FIT_RESULT_KEY, JSON.stringify(r)); }
+function fitTier(test, value){
+  const t = test.tiers;
+  if(test.better === 'lower'){
+    if(value <= t.great) return 'great';
+    if(value <= t.good) return 'good';
+    if(value <= t.pass) return 'pass';
+    return 'fail';
+  } else {
+    if(value >= t.great) return 'great';
+    if(value >= t.good) return 'good';
+    if(value >= t.pass) return 'pass';
+    return 'fail';
+  }
+}
+function fitTierLabel(tier){
+  return {pass:'ผ่านเกณฑ์', good:'ระดับดี', great:'ระดับดีมาก', fail:'ยังไม่ผ่าน'}[tier] || 'ยังไม่ทดสอบ';
+}
+function formatFitTime(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function renderFitReadyRing(results){
+  const passed = FIT_TESTS.filter(t=>{
+    const r = results[t.id];
+    return r && r.tier !== 'fail';
+  }).length;
+  const total = FIT_TESTS.length;
+  const pct = total ? Math.round(passed/total*100) : 0;
+  return `<div class="fitreadywrap">
+    <div class="fitring" style="--fitpct:${pct}"><span>${passed}/${total}<small>ผ่านเกณฑ์</small></span></div>
+    <div class="fitreadytext">ความพร้อม <b>${pct}%</b> — กรอกผลการทดสอบล่าสุดของแต่ละท่าด้านล่าง ระบบจะบอกว่าอยู่ระดับผ่าน/ดี/ดีมาก ตามเกณฑ์ในตารางด้านบน</div>
+  </div>`;
+}
+function renderFitChecklist(){
+  const wrap = $('fitScheduleList');
+  if(!wrap) return;
+  const results = loadFitResults();
+  let html = renderFitReadyRing(results);
+  html += FIT_TESTS.map(t=>{
+    const r = results[t.id];
+    const statusClass = r ? r.tier : '';
+    const statusText = r ? `${fitTierLabel(r.tier)} · ${t.fmt==='time' ? formatFitTime(r.value) : r.value+' '+t.unit}` : 'ยังไม่ทดสอบ';
+    return `<div class="fittest" data-fit-id="${t.id}">
+      <div class="fthead">
+        <div><div class="ftname">${t.name}</div><div class="ftcriteria">${t.hint}</div></div>
+        <div class="ftstatus ${statusClass}">${statusText}</div>
+      </div>
+      <div class="ftrow">
+        <input type="number" min="0" placeholder="${t.fmt==='time' ? 'วินาที เช่น 270' : 'จำนวนครั้ง'}" class="fitInput" data-fit-input="${t.id}" value="${r ? r.value : ''}">
+        <button data-fit-save="${t.id}">บันทึกผล</button>
+      </div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-fit-save]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.fitSave;
+      const test = FIT_TESTS.find(t=>t.id===id);
+      const input = wrap.querySelector(`[data-fit-input="${id}"]`);
+      const val = parseFloat(input.value);
+      if(isNaN(val) || val < 0){ showToast('กรุณากรอกตัวเลขให้ถูกต้อง'); return; }
+      const results2 = loadFitResults();
+      results2[id] = { value: val, tier: fitTier(test, val), date: new Date().toISOString() };
+      saveFitResults(results2);
+      logActivity(1);
+      renderFitChecklist();
+      showToast('บันทึกผลการทดสอบแล้ว 💪');
+    });
+  });
+}
+
+/* ============== แถบเมนูล่าง + ป้ายนับถอยหลังวันสอบแบบค้างทุกหน้า ============== */
+function renderExamDatePill(){
+  const pill = $('examDatePill');
+  if(!pill) return;
+  const savedDate = localStorage.getItem(EXAM_DATE_KEY);
+  pill.classList.remove('urgent','set');
+  if(!savedDate){ pill.textContent = 'ยังไม่กำหนดวันสอบ'; return; }
+  const target = new Date(savedDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.round((target - today) / 86400000);
+  if(diffDays > 0){
+    pill.textContent = `อีก ${diffDays} วันสอบ`;
+    pill.classList.add(diffDays <= 14 ? 'urgent' : 'set');
+  } else if(diffDays === 0){
+    pill.textContent = 'วันนี้คือวันสอบ!';
+    pill.classList.add('urgent');
+  } else {
+    pill.textContent = 'วันสอบผ่านไปแล้ว';
+  }
+}
+
+/* ============== คู่มือติดตั้งแอปลงหน้าจอโฮม ============== */
+if($('openInstallGuideBtn')) $('openInstallGuideBtn').addEventListener('click', ()=> $('installOverlay').classList.add('show'));
+if($('installCloseBtn')) $('installCloseBtn').addEventListener('click', ()=> $('installOverlay').classList.remove('show'));
+if($('installOverlay')) $('installOverlay').addEventListener('click', (e)=>{ if(e.target.id==='installOverlay') $('installOverlay').classList.remove('show'); });
+document.querySelectorAll('.install-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.install-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    $('stepsIos').classList.toggle('show', tab.dataset.plat==='ios');
+    $('stepsAndroid').classList.toggle('show', tab.dataset.plat==='android');
+  });
+});
+
+/* ============== ลงทะเบียน Service Worker (ใช้งานออฟไลน์ได้หลังโหลดครั้งแรก) ============== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{ /* เงียบไว้ถ้าลงทะเบียนไม่สำเร็จ ไม่กระทบการใช้งานปกติ */ });
+  });
+}
+
+renderExamDatePill();
 renderRoadmap();
 

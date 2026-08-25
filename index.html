@@ -2,8 +2,17 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ติวสอบตำรวจ & คณิตศาสตร์ · All-in-One</title>
+<meta name="description" content="ติวสอบนายสิบตำรวจครบวงจร คณิตศาสตร์ ภาษาไทย กฎหมาย คลังข้อสอบ ฝึกพละ ใช้งานออฟไลน์ได้">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#181B1E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ติวสอบตำรวจ">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -32,10 +41,113 @@
     margin:0;
     font-family:'Kanit',sans-serif;
     background:radial-gradient(circle at 15% 0%, var(--bg-grad), var(--bg) 60%);
-    color:var(--ink); min-height:100vh; padding:12px 12px 60px;
-    transition:background-color .2s, color .2s, filter .15s;
-    filter:brightness(var(--user-brightness, 1));
+    color:var(--ink); min-height:100vh; padding:12px 12px calc(78px + env(safe-area-inset-bottom));
+    transition:background-color .2s, color .2s;
   }
+  /* หมายเหตุ: ใส่ filter (ปรับความสว่าง) ไว้ที่ .wrap แทน body โดยตั้งใจ —
+     เพราะ CSS filter บนบรรพบุรุษจะสร้าง containing block ใหม่ ทำให้ position:fixed
+     ของลูกอย่างแถบเมนูล่าง/ป้ายวันสอบขยับตามความสูงของเนื้อหาแทนที่จะค้างกับหน้าจอจริง */
+  .wrap{ filter:brightness(var(--user-brightness, 1)); transition:filter .15s; }
+
+  /* ---------- roadmapExtras: ส่วนหัวที่เกี่ยวกับหน้าติวหนังสือเท่านั้น
+     (แท็บวิชา/ปุ่มเครื่องมือ/โจทย์ประจำวัน/ความปลอดภัย/สำรองข้อมูล/เลือกสาย/ความคืบหน้า)
+     ซ่อนไว้เวลาอยู่หน้าอื่นจากแถบเมนูล่าง เพื่อให้แต่ละแท็บพาไปหน้านั้นทันทีแบบแอปจริง ไม่ต้องเลื่อนผ่าน ---------- */
+  #roadmapExtras.hide{display:none;}
+
+  /* ---------- bottom nav bar (persistent app-like navigation) ---------- */
+  .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;
+    background:var(--card);border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    box-shadow:0 -6px 20px rgba(0,0,0,.25);}
+  .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:none;border:none;color:var(--muted-dim);font-family:inherit;
+    font-size:10.5px;font-weight:600;padding:6px 2px;cursor:pointer;border-radius:10px;}
+  .navbtn .navicon{font-size:18px;line-height:1;}
+  .navbtn.active{color:var(--amber);}
+  .navbtn:active{background:var(--card-in);}
+
+  /* ---------- persistent exam-date pill (visible on every screen) ---------- */
+  .examdatepill{position:fixed;top:10px;right:10px;z-index:45;background:var(--card);
+    border:1px solid var(--amber);color:var(--amber);font-size:10.5px;font-weight:700;
+    border-radius:20px;padding:6px 12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);
+    max-width:132px;text-align:center;line-height:1.3;}
+  .examdatepill.urgent{color:var(--red);border-color:var(--red);}
+  .examdatepill.set{color:var(--green);border-color:var(--green);}
+
+  /* ---------- install-app guide modal ---------- */
+  .installbtn{width:100%;background:var(--card);border:1px solid var(--blue);color:var(--blue);
+    border-radius:10px;font-family:inherit;font-weight:600;font-size:12.5px;padding:10px;
+    cursor:pointer;margin-top:8px;}
+  .install-overlay{display:none;position:fixed;inset:0;background:rgba(10,11,13,.72);z-index:85;
+    align-items:center;justify-content:center;padding:16px;}
+  .install-overlay.show{display:flex;}
+  .install-modal{width:100%;max-width:440px;max-height:86vh;overflow-y:auto;background:var(--card);
+    border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .install-modal h3{margin:0 0 4px;font-size:15px;}
+  .install-modal .imsub{font-size:11.5px;color:var(--muted);margin-bottom:14px;}
+  .install-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .install-tab{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--muted);
+    border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;padding:8px;cursor:pointer;}
+  .install-tab.active{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .install-steps{display:none;}
+  .install-steps.show{display:block;}
+  .install-step{display:flex;gap:10px;margin-bottom:12px;}
+  .install-step .isnum{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--card-in);
+    border:1px solid var(--amber);color:var(--amber);display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;}
+  .install-step .istxt{font-size:12.5px;line-height:1.55;padding-top:2px;}
+  .install-close{width:100%;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
+    border-radius:10px;font-family:inherit;font-weight:600;font-size:13px;padding:11px;cursor:pointer;margin-top:6px;}
+
+  /* ---------- store screen (ร้านค้า / เอกสารแนะนำ) ---------- */
+  #storescreen{display:none;}
+  #storescreen.active{display:block;}
+  .store-notice{background:rgba(102,181,134,.1);border:1px solid var(--green);border-radius:12px;
+    padding:12px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.6;color:var(--ink);}
+  .store-notice b{color:var(--green);}
+  .store-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .store-top{display:flex;gap:12px;margin-bottom:10px;}
+  .store-thumb{width:74px;height:96px;flex-shrink:0;border-radius:8px;background:var(--card-in);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .store-info{flex:1;min-width:0;}
+  .store-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;
+    background:rgba(102,181,134,.16);color:var(--green);margin-bottom:6px;}
+  .store-badge.paid{background:rgba(255,176,71,.16);color:var(--amber);}
+  .store-title{font-size:13.5px;font-weight:600;line-height:1.4;}
+  .store-files{display:flex;flex-direction:column;gap:7px;}
+  .store-file{display:flex;align-items:center;gap:10px;background:var(--card-in);border:1px solid var(--line);
+    border-radius:10px;padding:9px 12px;text-decoration:none;color:var(--ink);font-size:12.5px;font-weight:600;}
+  .store-file .sf-ic{flex-shrink:0;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;
+    justify-content:center;font-size:10px;font-weight:800;color:#fff;}
+  .store-file .sf-name{flex:1;}
+  .store-file .sf-dl{color:var(--green);font-size:14px;}
+
+  /* ---------- fitness pass/fail checklist ---------- */
+  .fitreadywrap{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .fitring{position:relative;width:76px;height:76px;flex-shrink:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--ink);
+    background:conic-gradient(var(--green) calc(var(--fitpct,0)*1%), var(--line-soft) 0);}
+  .fitring::after{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--card);}
+  .fitring span{position:relative;z-index:1;text-align:center;line-height:1.15;}
+  .fitring span small{display:block;font-size:9px;font-weight:500;color:var(--muted-dim);}
+  .fitreadytext{flex:1;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .fitreadytext b{color:var(--ink);}
+  .fittest{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:10px;}
+  .fittest .fthead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:9px;}
+  .ftname{font-size:13.5px;font-weight:600;}
+  .ftcriteria{font-size:11px;color:var(--muted-dim);margin-top:2px;}
+  .ftstatus{flex-shrink:0;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;
+    background:var(--card-in);color:var(--muted-dim);}
+  .ftstatus.pass{background:rgba(102,181,134,.16);color:var(--green);}
+  .ftstatus.good{background:rgba(111,173,224,.16);color:var(--blue);}
+  .ftstatus.great{background:rgba(255,176,71,.18);color:var(--amber);}
+  .ftstatus.fail{background:rgba(241,106,68,.16);color:var(--red);}
+  .ftrow{display:flex;gap:8px;align-items:center;}
+  .ftrow input{flex:1;background:var(--card-in);border:1px solid var(--line);border-radius:8px;color:var(--ink);
+    font-family:inherit;font-size:13px;padding:8px 10px;min-width:0;}
+  .ftrow button{flex-shrink:0;background:var(--amber);color:#1a1400;border:none;border-radius:8px;
+    font-family:inherit;font-weight:600;font-size:12px;padding:8px 12px;cursor:pointer;}
   /* ---------- display settings bar: theme (compact icons) + brightness + language ---------- */
   .dispbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:10px auto 0;max-width:360px;}
   .dispgroup{display:flex;align-items:center;gap:5px;}
@@ -417,6 +529,7 @@
 </style>
 </head>
 <body>
+<div class="examdatepill" id="examDatePill" onclick="openDashboardScreen()">ยังไม่กำหนดวันสอบ</div>
 <div class="wrap">
   <header>
     <div class="eyebrow">POLICE EXAM · FROM ZERO</div>
@@ -443,6 +556,7 @@
     </div>
   </header>
 
+  <div id="roadmapExtras">
   <div class="tabs" id="subjectTabs">
     <button class="tab active" onclick="switchSubject('math', this)">📐 <span data-i18n="tabMath">คณิต</span></button>
     <button class="tab" onclick="switchSubject('thai', this)">📖 <span data-i18n="tabThai">ไทย</span></button>
@@ -488,6 +602,7 @@
     </div>
     <input type="file" id="dataImportInput" accept="application/json" style="display:none;">
     <div class="datamsg" data-i18n="dataBackupMsg">ข้อมูลทั้งหมดเก็บอยู่ใน Local Storage ของเบราว์เซอร์นี้เท่านั้น หากล้างแคชหรือเปลี่ยนเครื่อง/เบราว์เซอร์ ข้อมูลจะหายถ้าไม่ได้สำรองไว้ก่อน แนะนำให้กด "ส่งออกไฟล์สำรอง" เก็บไว้เป็นระยะ</div>
+    <button class="installbtn" id="openInstallGuideBtn">📲 ติดตั้งแอปลงหน้าจอโฮม (ใช้งานเหมือนแอปจริง ไม่ต้องเปิดเบราว์เซอร์)</button>
   </div>
 
   <div class="trackwrap">
@@ -506,6 +621,7 @@
   <div class="progresswrap">
     <div class="row"><span data-i18n="progressLabel">ความคืบหน้า</span><b id="progText">0 / 12 บท</b></div>
     <div class="bar"><div class="bar-fill" id="progFill" style="width:0%"></div></div>
+  </div>
   </div>
 
   <div id="roadmap" class="active">
@@ -712,6 +828,17 @@
     <div class="vocab-grid" id="vocabGrid"></div>
     <button class="tool-btn" id="vocabShuffleBtn" style="margin-top:14px;">🔀 สุ่มรอบใหม่</button>
   </div>
+
+  <div id="storescreen">
+    <button class="backbtn" id="storeBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
+    <div class="lhead">
+      <div class="ltag">ร้านค้า</div>
+      <h2>เอกสารแนะนำ</h2>
+      <p>ตัวช่วยเสริมแบบพกพา ไว้ปรินต์อ่านตอนไม่มีเน็ต หรือฝึกทำในกระดาษจริงเหมือนสนามสอบ</p>
+    </div>
+    <div class="store-notice">✅ เนื้อหาในแอปครบสำหรับสอบแล้ว — เอกสารเหล่านี้เป็น<b>ตัวช่วยเสริม</b> เลือกได้ตามต้องการ</div>
+    <div id="storeList"></div>
+  </div>
 </div>
 
 <div class="daily-overlay" id="dailyOverlay">
@@ -748,6 +875,36 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="install-overlay" id="installOverlay">
+  <div class="install-modal">
+    <h3>📲 ติดตั้งแอปลงหน้าจอโฮม</h3>
+    <div class="imsub">ใช้งานง่าย เร็ว เปิดจากไอคอนได้เลย ไม่ต้องเปิดเบราว์เซอร์ทุกครั้ง</div>
+    <div class="install-tabs">
+      <button class="install-tab active" data-plat="ios">iPhone (Safari)</button>
+      <button class="install-tab" data-plat="android">Android (Chrome)</button>
+    </div>
+    <div class="install-steps show" id="stepsIos">
+      <div class="install-step"><div class="isnum">1</div><div class="istxt">แตะปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรชี้ขึ้น) แถบด้านล่างของ Safari</div></div>
+      <div class="install-step"><div class="isnum">2</div><div class="istxt">เลื่อนลงแล้วแตะ <b>"เพิ่มไปยังหน้าจอโฮม"</b> (Add to Home Screen)</div></div>
+      <div class="install-step"><div class="isnum">3</div><div class="istxt">แตะ <b>"เพิ่ม"</b> มุมขวาบน เสร็จแล้ว! ไอคอนจะปรากฏบนหน้าจอโฮมเหมือนแอปปกติ</div></div>
+    </div>
+    <div class="install-steps" id="stepsAndroid">
+      <div class="install-step"><div class="isnum">1</div><div class="istxt">แตะปุ่ม <b>จุดสามจุด</b> (⋮) มุมขวาบนของ Chrome</div></div>
+      <div class="install-step"><div class="isnum">2</div><div class="istxt">เลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มไปยังหน้าจอโฮม"</b></div></div>
+      <div class="install-step"><div class="isnum">3</div><div class="istxt">แตะ <b>"ติดตั้ง"</b> เสร็จแล้ว! ไอคอนจะปรากฏบนหน้าจอโฮมและเปิดเต็มจอเหมือนแอปจริง</div></div>
+    </div>
+    <button class="install-close" id="installCloseBtn">ปิด</button>
+  </div>
+</div>
+
+<div class="bottomnav" id="bottomNav">
+  <button class="navbtn" data-nav="home" onclick="openDashboardScreen()"><span class="navicon">🏠</span>หน้าแรก</button>
+  <button class="navbtn" data-nav="roadmap" onclick="goRoadmapTab()"><span class="navicon">📘</span>ติวหนังสือ</button>
+  <button class="navbtn" data-nav="exam" onclick="goExamTab()"><span class="navicon">📝</span>ทำข้อสอบ</button>
+  <button class="navbtn" data-nav="fitness" onclick="openFitnessScreen()"><span class="navicon">🏃</span>ฝึกพละ</button>
+  <button class="navbtn" data-nav="store" onclick="openStoreScreen()"><span class="navicon">🛍️</span>ร้านค้า</button>
+</div>
 
 <script src="data.js"></script>
 <script src="exam-data.js"></script>
