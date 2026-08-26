@@ -1253,24 +1253,29 @@ if($('vocabBackBtn')){
 }
 if($('vocabShuffleBtn')) $('vocabShuffleBtn').addEventListener('click', ()=> newVocabRound());
 
-/* ============== ร้านค้า / เอกสารแนะนำ ==============
-   แก้ไขรายการนี้ได้เลย: ใส่ลิงก์ไฟล์ PDF จริงของคุณที่ href (เช่น อัปโหลดขึ้น Google Drive แบบเปิดสาธารณะ,
-   GitHub raw link, หรือใส่ path ไฟล์ในโปรเจกต์เช่น "files/exam-admin-1.pdf") ตอนนี้เป็นตัวอย่างโครงสร้างไว้ก่อน */
+/* ============== ร้านค้า / คลังไฟล์เอกสาร ==============
+   แก้ไขรายการนี้ได้เลย: ใส่ path ไฟล์ PDF จริงที่ href
+   - ไฟล์ในโปรเจกต์เอง: วางไฟล์ไว้ในโฟลเดอร์ "files/" แล้วใส่ href เป็น "files/exam-admin-1.pdf"
+     (แบบนี้เปิดออฟไลน์ได้หลัง service worker แคชไว้ครั้งแรก)
+   - ลิงก์นอก (Google Drive แบบเปิดสาธารณะ, GitHub raw ฯลฯ) ก็ใช้ได้ แต่จะเปิดออนไลน์เท่านั้น
+     และปุ่ม "ดาวน์โหลด" อาจกดไม่ได้ผลกับบางลิงก์ (ตัวเบราว์เซอร์เป็นคนคุม ไม่ใช่แอป)
+   downloadable: true  → มีปุ่มดาวน์โหลดให้ในตัวดูไฟล์
+   downloadable: false → เปิดดูในแอปได้อย่างเดียว ไม่มีปุ่มดาวน์โหลดให้ (ป้องกันเบื้องต้น ไม่ใช่บล็อกจริง 100%) */
 const STORE_ITEMS = [
   {
     title:'ข้อสอบปราบปราม ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📘',
     files:[
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'#'},
-      {label:'กระดาษคำตอบ', ext:'PDF', href:'#'},
-      {label:'เฉลยละเอียด', ext:'PDF', href:'#'}
+      {label:'ตัวข้อสอบ', ext:'PDF', href:'#', downloadable:true},
+      {label:'กระดาษคำตอบ', ext:'PDF', href:'#', downloadable:true},
+      {label:'เฉลยละเอียด', ext:'PDF', href:'#', downloadable:false}
     ]
   },
   {
     title:'ข้อสอบอำนวยการ ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📗',
     files:[
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'#'},
-      {label:'กระดาษคำตอบ', ext:'PDF', href:'#'},
-      {label:'เฉลยละเอียด', ext:'PDF', href:'#'}
+      {label:'ตัวข้อสอบ', ext:'PDF', href:'#', downloadable:true},
+      {label:'กระดาษคำตอบ', ext:'PDF', href:'#', downloadable:true},
+      {label:'เฉลยละเอียด', ext:'PDF', href:'#', downloadable:false}
     ]
   }
 ];
@@ -1279,7 +1284,7 @@ function renderStoreList(){
   if(!list) return;
   if(!STORE_ITEMS.length){ list.innerHTML = '<div class="dashempty">ยังไม่มีเอกสารในขณะนี้</div>'; return; }
   const extColor = {PDF:'#C6482A', DOC:'#2E76B5', XLS:'#3F8F5F'};
-  list.innerHTML = STORE_ITEMS.map(item=>`
+  list.innerHTML = STORE_ITEMS.map((item,ii)=>`
     <div class="store-card">
       <div class="store-top">
         <div class="store-thumb">${item.icon||'📄'}</div>
@@ -1289,11 +1294,11 @@ function renderStoreList(){
         </div>
       </div>
       <div class="store-files">
-        ${item.files.map(f=>`<a class="store-file" href="${f.href}" target="_blank" rel="noopener" onclick="${f.href==='#' ? "event.preventDefault();showToast('ยังไม่ได้แนบไฟล์นี้ — ใส่ลิงก์ที่ STORE_ITEMS ใน app.js');" : ''}">
+        ${item.files.map((f,fi)=>`<button type="button" class="store-file" onclick="openPdfViewer(${ii},${fi})">
           <span class="sf-ic" style="background:${extColor[f.ext]||'#767D84'}">${f.ext}</span>
           <span class="sf-name">${f.label}</span>
-          <span class="sf-dl">⬇</span>
-        </a>`).join('')}
+          <span class="sf-view">เปิดดู ›</span>
+        </button>`).join('')}
       </div>
     </div>
   `).join('');
@@ -1303,6 +1308,55 @@ function openStoreScreen(){
   showScreen('storescreen');
 }
 if($('storeBackBtn')) $('storeBackBtn').addEventListener('click', goRoadmapTab);
+
+/* ============== ตัวดูไฟล์ในแอป (เปิด PDF โดยไม่ออกจากแอป) ==============
+   หมายเหตุสำคัญ: เว็บแอป/PWA ไม่มีสิทธิ์เข้าถึงระบบเพียงพอจะ "บล็อกการแคปหน้าจอ" ได้จริง
+   แบบแอปธรรมชาติ (เช่น FLAG_SECURE บน Android) — ที่ทำได้คือกันเบื้องต้น: ปิดลากเลือก/คัดลอก,
+   ปิดเมนูคลิกขวา/กดค้าง, ใส่ลายน้ำทับเนื้อหา และซ่อนปุ่มดาวน์โหลดถ้าตั้งไว้ว่าไม่ให้โหลด
+   คนที่ตั้งใจแคปหน้าจอจริงๆ ยังแคปได้อยู่ ทำได้แค่ลดความสะดวกและทิ้งร่องรอยลายน้ำไว้ */
+let pdfGuardActive = false;
+function buildPdfWatermark(text){
+  const wm = $('pdfWatermark');
+  if(!wm) return;
+  wm.innerHTML = '';
+  for(let i=0;i<24;i++){ const s=document.createElement('span'); s.textContent=text; wm.appendChild(s); }
+}
+function openPdfViewer(itemIndex, fileIndex){
+  const item = STORE_ITEMS[itemIndex];
+  const file = item && item.files[fileIndex];
+  if(!file) return;
+  if(file.href === '#'){ showToast('ยังไม่ได้แนบไฟล์นี้ — ใส่ path ที่ STORE_ITEMS ใน app.js'); return; }
+  $('pdfTitle').textContent = `${item.title} · ${file.label}`;
+  $('pdfFrame').src = file.href;
+  const dlBtn = $('pdfDlBtn');
+  if(file.downloadable){
+    dlBtn.style.display = '';
+    dlBtn.href = file.href;
+    dlBtn.setAttribute('download', file.label || '');
+  } else {
+    dlBtn.style.display = 'none';
+    dlBtn.removeAttribute('href');
+  }
+  buildPdfWatermark('ห้ามแจกจ่าย · ' + (item.title||''));
+  $('pdfOverlay').classList.add('show');
+  pdfGuardActive = true;
+  document.body.style.overflow = 'hidden';
+}
+function closePdfViewer(){
+  $('pdfOverlay').classList.remove('show');
+  $('pdfFrame').src = '';
+  pdfGuardActive = false;
+  $('pdfBlurguard').classList.remove('show');
+  document.body.style.overflow = '';
+}
+if($('pdfCloseBtn')) $('pdfCloseBtn').addEventListener('click', closePdfViewer);
+if($('pdfBody')) $('pdfBody').addEventListener('contextmenu', e=> e.preventDefault());
+if($('storeList')) $('storeList').addEventListener('contextmenu', e=> e.preventDefault());
+// กันเบื้องต้นตอนสลับแอป/มินิไมซ์ขณะเปิดไฟล์อยู่ (ไม่ใช่การจับภาพหน้าจอโดยตรง แต่ลดโอกาสเห็นเนื้อหาตอนสลับหน้าจอ/บันทึกหน้าจอ)
+document.addEventListener('visibilitychange', ()=>{
+  if(!pdfGuardActive) return;
+  $('pdfBlurguard').classList.toggle('show', document.hidden);
+});
 
 /* ============== ฝึกพละ: เช็คลิสต์ผ่าน/ไม่ผ่านรายท่า ==============
    ใช้เกณฑ์ชุดเดียวกับตารางเกณฑ์คะแนนด้านบน (ผ่าน/ดี/ดีมาก) ผู้ใช้กรอกผลที่ทำได้ล่าสุด

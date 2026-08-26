@@ -37,21 +37,12 @@
     --red:#C6482A; --green:#3F8F5F; --blue:#2E76B5; --purple:#6E5DC6;
   }
   *{box-sizing:border-box;}
-  /* ---------- ป้องกันจอขาวกระพริบตอนเลื่อนเร็ว/เด้งขอบ (iOS rubber-band / Android overscroll glow) ----------
-     ถ้าไม่ตั้ง background ให้ <html> เบราว์เซอร์จะโชว์พื้นขาวเริ่มต้นให้เห็นแวบ ๆ ตรงขอบตอนเด้งกลับ
-     overscroll-behavior-y ช่วยตัดพฤติกรรมเด้ง/รีเฟรชที่ลากเนื้อหาหลุดจากพื้นหลังที่ทาสีไว้ ---------- */
-  html{
-    background:var(--bg);
-    height:100%;
-    overscroll-behavior-y:none;
-  }
   body{
     margin:0;
     font-family:'Kanit',sans-serif;
     background:radial-gradient(circle at 15% 0%, var(--bg-grad), var(--bg) 60%);
     color:var(--ink); min-height:100vh; padding:12px 12px calc(78px + env(safe-area-inset-bottom));
     transition:background-color .2s, color .2s;
-    overscroll-behavior-y:none;
   }
   /* หมายเหตุ: ใส่ filter (ปรับความสว่าง) ไว้ที่ .wrap แทน body โดยตั้งใจ —
      เพราะ CSS filter บนบรรพบุรุษจะสร้าง containing block ใหม่ ทำให้ position:fixed
@@ -130,6 +121,33 @@
     justify-content:center;font-size:10px;font-weight:800;color:#fff;}
   .store-file .sf-name{flex:1;}
   .store-file .sf-dl{color:var(--green);font-size:14px;}
+  .store-file{border:none;width:100%;font-family:inherit;cursor:pointer;}
+  .store-file .sf-view{color:var(--blue);font-size:11.5px;font-weight:700;flex-shrink:0;}
+  .store-note-small{font-size:11px;color:var(--muted-dim);line-height:1.6;margin:-4px 0 12px;}
+
+  /* ---------- ป้องกันการคัดลอก/แคปแบบพยายามที่สุด (ไม่ใช่การบล็อกจริง — ดูคำอธิบายในแชท) ----------
+     ใช้เฉพาะหน้าคลังไฟล์และตัวดูไฟล์ ตามที่ขอ ส่วนหน้าอื่นของแอปยังแคปได้ปกติเพื่อแจ้งบั๊ก */
+  .nocapture, .nocapture *{
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+  }
+  .pdf-overlay{display:none;position:fixed;inset:0;background:#000;z-index:90;flex-direction:column;}
+  .pdf-overlay.show{display:flex;}
+  .pdf-head{display:flex;align-items:center;gap:8px;padding:10px 12px;
+    padding-top:calc(10px + env(safe-area-inset-top));background:var(--card);border-bottom:1px solid var(--line);}
+  .pdf-title{flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pdf-headbtn{flex-shrink:0;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;font-family:inherit;font-size:11.5px;font-weight:600;padding:7px 10px;cursor:pointer;text-decoration:none;}
+  .pdf-headbtn.dl{color:var(--green);border-color:var(--green);}
+  .pdf-body{position:relative;flex:1;min-height:0;background:#0a0a0a;}
+  .pdf-body iframe{width:100%;height:100%;border:none;display:block;background:#fff;}
+  .pdf-watermark{position:absolute;inset:0;pointer-events:none;overflow:hidden;display:flex;flex-wrap:wrap;
+    align-content:space-around;justify-content:space-around;opacity:.16;transform:rotate(-28deg) scale(1.3);}
+  .pdf-watermark span{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;padding:22px 30px;}
+  .pdf-blurguard{display:none;position:fixed;inset:0;z-index:95;background:rgba(10,11,13,.97);
+    backdrop-filter:blur(18px);align-items:center;justify-content:center;color:var(--muted);
+    font-size:12.5px;text-align:center;padding:20px;}
+  .pdf-blurguard.show{display:flex;}
 
   /* ---------- fitness pass/fail checklist ---------- */
   .fitreadywrap{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);
@@ -838,17 +856,31 @@
     <button class="tool-btn" id="vocabShuffleBtn" style="margin-top:14px;">🔀 สุ่มรอบใหม่</button>
   </div>
 
-  <div id="storescreen">
+  <div id="storescreen" class="nocapture">
     <button class="backbtn" id="storeBackBtn">‹ กลับไปที่แผนที่เนื้อหา</button>
     <div class="lhead">
-      <div class="ltag">ร้านค้า</div>
+      <div class="ltag">ร้านค้า / คลังไฟล์</div>
       <h2>เอกสารแนะนำ</h2>
       <p>ตัวช่วยเสริมแบบพกพา ไว้ปรินต์อ่านตอนไม่มีเน็ต หรือฝึกทำในกระดาษจริงเหมือนสนามสอบ</p>
     </div>
     <div class="store-notice">✅ เนื้อหาในแอปครบสำหรับสอบแล้ว — เอกสารเหล่านี้เป็น<b>ตัวช่วยเสริม</b> เลือกได้ตามต้องการ</div>
+    <div class="store-note-small">🔒 หน้านี้ปิดการคัดลอก/ลากเลือกไว้เพื่อลดการแจกไฟล์ต่อ (ไม่ใช่การบล็อกแคปหน้าจอ 100% — เว็บแอปทำได้แค่ระดับกันเบื้องต้น)</div>
     <div id="storeList"></div>
   </div>
 </div>
+
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-head">
+    <button class="pdf-headbtn" id="pdfCloseBtn">‹ ปิด</button>
+    <div class="pdf-title" id="pdfTitle">ไฟล์เอกสาร</div>
+    <a class="pdf-headbtn dl" id="pdfDlBtn" href="#" download>⬇ ดาวน์โหลด</a>
+  </div>
+  <div class="pdf-body nocapture" id="pdfBody">
+    <iframe id="pdfFrame" title="ตัวดูไฟล์เอกสาร"></iframe>
+    <div class="pdf-watermark" id="pdfWatermark"></div>
+  </div>
+</div>
+<div class="pdf-blurguard" id="pdfBlurguard">🙈 เนื้อหาถูกซ่อนชั่วคราวขณะสลับแอป — แตะกลับมาที่นี่เพื่อดูต่อ</div>
 
 <div class="daily-overlay" id="dailyOverlay">
   <div class="daily-modal">
