@@ -6,7 +6,17 @@ const $ = id => document.getElementById(id);
 const ALL_SCREENS = ['roadmap','lesson','examscreen','fitnessscreen','dashboardscreen','vocabScreen','storescreen'];
 const SCREEN_NAV_MAP = { roadmap:'roadmap', lesson:'roadmap', examscreen:'exam', fitnessscreen:'fitness', dashboardscreen:'home', vocabScreen:'roadmap', storescreen:'store' };
 function showScreen(id){
-  ALL_SCREENS.forEach(s=>{ const el = $(s); if(el) el.classList.toggle('active', s===id); });
+  ALL_SCREENS.forEach(s=>{ 
+    const el = $(s); 
+    if(el) {
+      if(s===id){
+        el.classList.add('active');
+        el.style.animation = 'screenIn 0.3s ease';
+      } else {
+        el.classList.remove('active');
+      }
+    }
+  });
   const navKey = SCREEN_NAV_MAP[id];
   document.querySelectorAll('#bottomNav .navbtn').forEach(b=> b.classList.toggle('active', b.dataset.nav===navKey));
   const extras = $('roadmapExtras');
