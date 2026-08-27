@@ -23,7 +23,7 @@
 
 const STORE_ITEMS = [
   {
-    title:'ข้อสอบ (อยู่ในการเทสระบบ) ', badge:'ฟรี!', icon:'📘', category:'ปราบปราม',
+    title:'ข้อสอบ (อยู่ในการเทสระบบ) ', badge:'ฟรี!', icon:'📘', category:'ทั้งหมด',
     files:[
       {label:'ตัวข้อสอบ', ext:'PDF', href:'thai/หลักธรรม.pdf', downloadable:false},
       {label:'ตัวข้อสอบ', ext:'PDF', href:'thai/คำเป็น-คำตาย.pdf', downloadable:false},
