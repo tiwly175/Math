@@ -6,7 +6,7 @@
 <title>ติวสอบตำรวจ & คณิตศาสตร์ · All-in-One</title>
 <meta name="description" content="ติวสอบนายสิบตำรวจครบวงจร คณิตศาสตร์ ภาษาไทย กฎหมาย คลังข้อสอบ ฝึกพละ ใช้งานออฟไลน์ได้">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#181B1E">
+<meta name="theme-color" content="#0F172A">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,22 +14,32 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#181B1E; --bg-grad:#1F2327; --card:#24282D; --card-in:#14171A;
-    --line:#383E44; --line-soft:#2C3136; --ink:#F4F5F0; --muted:#A7AEB5; --muted-dim:#767D84;
-    --amber:#FFB447; --amber-glow:rgba(255,176,71,.45);
-    --red:#F16A44; --green:#66B586; --blue:#6FADE0; --purple:#AB9EFF;
+    --bg:#0F172A;
+    --bg-grad:#1E293B;
+    --card:#1E293B;
+    --card-in:#0B1220;
+    --line:#334155;
+    --line-soft:#263240;
+    --ink:#F1F5F9;
+    --muted:#94A3B8;
+    --muted-dim:#64748B;
+    --amber:#FBBF24;
+    --amber-glow:rgba(251,191,36,.35);
+    --red:#EF4444;
+    --green:#10B981;
+    --blue:#3B82F6;
+    --purple:#8B5CF6;
   }
-  /* ---------- โหมดกลางคืน: มืดสนิท ลดความสว่าง/ความอิ่มสี ถนอมสายตาตอนดึก ---------- */
+  /* โหมดกลางคืน/มืด/สว่าง (คงไว้เหมือนเดิม แต่ปรับสีให้เข้ากัน) */
   :root[data-theme="night"]{
     --bg:#0A0B0C; --bg-grad:#0E0F10; --card:#141516; --card-in:#0A0A0A;
     --line:#232423; --line-soft:#1B1C1B; --ink:#D8CFC2; --muted:#8A8377; --muted-dim:#615B51;
     --amber:#C98A3C; --amber-glow:rgba(201,138,60,.30);
     --red:#B85B3F; --green:#5B9270; --blue:#5C87A8; --purple:#8B7FC4;
   }
-  /* ---------- โหมดกลางวัน: พื้นสว่าง ตัวอักษรเข้ม อ่านง่ายกลางแดด/ตอนเช้า ---------- */
   :root[data-theme="light"]{
     --bg:#F6F5F1; --bg-grad:#FFFFFF; --card:#FFFFFF; --card-in:#EFEDE6;
     --line:#DAD5C9; --line-soft:#E9E6DD; --ink:#20242A; --muted:#5B6169; --muted-dim:#82878E;
@@ -39,42 +49,33 @@
   *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:'Kanit',sans-serif;
+    font-family:'IBM Plex Sans Thai',sans-serif;
     background:radial-gradient(circle at 15% 0%, var(--bg-grad), var(--bg) 60%);
     color:var(--ink); min-height:100vh; padding:12px 12px calc(78px + env(safe-area-inset-bottom));
     transition:background-color .2s, color .2s;
   }
-  /* หมายเหตุ: ใส่ filter (ปรับความสว่าง) ไว้ที่ .wrap แทน body โดยตั้งใจ —
-     เพราะ CSS filter บนบรรพบุรุษจะสร้าง containing block ใหม่ ทำให้ position:fixed
-     ของลูกอย่างแถบเมนูล่าง/ป้ายวันสอบขยับตามความสูงของเนื้อหาแทนที่จะค้างกับหน้าจอจริง */
   .wrap{ filter:brightness(var(--user-brightness, 1)); transition:filter .15s; }
-
-  /* ---------- roadmapExtras: ส่วนหัวที่เกี่ยวกับหน้าติวหนังสือเท่านั้น
-     (แท็บวิชา/ปุ่มเครื่องมือ/โจทย์ประจำวัน/ความปลอดภัย/สำรองข้อมูล/เลือกสาย/ความคืบหน้า)
-     ซ่อนไว้เวลาอยู่หน้าอื่นจากแถบเมนูล่าง เพื่อให้แต่ละแท็บพาไปหน้านั้นทันทีแบบแอปจริง ไม่ต้องเลื่อนผ่าน ---------- */
   #roadmapExtras.hide{display:none;}
-
-  /* ---------- bottom nav bar (persistent app-like navigation) ---------- */
   .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;
     background:var(--card);border-top:1px solid var(--line);
     padding:6px 4px calc(6px + env(safe-area-inset-bottom));
     box-shadow:0 -6px 20px rgba(0,0,0,.25);}
   .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
     background:none;border:none;color:var(--muted-dim);font-family:inherit;
-    font-size:10.5px;font-weight:600;padding:6px 2px;cursor:pointer;border-radius:10px;}
+    font-size:10.5px;font-weight:600;padding:6px 2px;cursor:pointer;border-radius:10px;position:relative;}
   .navbtn .navicon{font-size:18px;line-height:1;}
   .navbtn.active{color:var(--amber);}
-  .navbtn:active{background:var(--card-in);}
-
-  /* ---------- persistent exam-date pill (visible on every screen) ---------- */
+  .navbtn.active::after{
+    content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+    width:20px;height:3px;background:var(--amber);border-radius:10px;
+  }
+  .navbtn:active{background:rgba(255,255,255,.05);}
   .examdatepill{position:fixed;top:10px;right:10px;z-index:45;background:var(--card);
     border:1px solid var(--amber);color:var(--amber);font-size:10.5px;font-weight:700;
     border-radius:20px;padding:6px 12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);
     max-width:132px;text-align:center;line-height:1.3;}
   .examdatepill.urgent{color:var(--red);border-color:var(--red);}
   .examdatepill.set{color:var(--green);border-color:var(--green);}
-
-  /* ---------- install-app guide modal ---------- */
   .installbtn{width:100%;background:var(--card);border:1px solid var(--blue);color:var(--blue);
     border-radius:10px;font-family:inherit;font-weight:600;font-size:12.5px;padding:10px;
     cursor:pointer;margin-top:8px;}
@@ -88,7 +89,7 @@
   .install-tabs{display:flex;gap:6px;margin-bottom:14px;}
   .install-tab{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--muted);
     border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;padding:8px;cursor:pointer;}
-  .install-tab.active{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .install-tab.active{background:rgba(251,191,36,.14);border-color:var(--amber);color:var(--amber);}
   .install-steps{display:none;}
   .install-steps.show{display:block;}
   .install-step{display:flex;gap:10px;margin-bottom:12px;}
@@ -98,21 +99,19 @@
   .install-step .istxt{font-size:12.5px;line-height:1.55;padding-top:2px;}
   .install-close{width:100%;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
     border-radius:10px;font-family:inherit;font-weight:600;font-size:13px;padding:11px;cursor:pointer;margin-top:6px;}
-
-  /* ---------- store screen (ร้านค้า / เอกสารแนะนำ) ---------- */
   #storescreen{display:none;}
   #storescreen.active{display:block;}
-  .store-notice{background:rgba(102,181,134,.1);border:1px solid var(--green);border-radius:12px;
+  .store-notice{background:rgba(16,185,129,.1);border:1px solid var(--green);border-radius:12px;
     padding:12px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.6;color:var(--ink);}
   .store-notice b{color:var(--green);}
-  .store-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .store-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .store-top{display:flex;gap:12px;margin-bottom:10px;}
   .store-thumb{width:74px;height:96px;flex-shrink:0;border-radius:8px;background:var(--card-in);
     border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;}
   .store-info{flex:1;min-width:0;}
   .store-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;
-    background:rgba(102,181,134,.16);color:var(--green);margin-bottom:6px;}
-  .store-badge.paid{background:rgba(255,176,71,.16);color:var(--amber);}
+    background:rgba(16,185,129,.16);color:var(--green);margin-bottom:6px;}
+  .store-badge.paid{background:rgba(251,191,36,.16);color:var(--amber);}
   .store-title{font-size:13.5px;font-weight:600;line-height:1.4;}
   .store-files{display:flex;flex-direction:column;gap:7px;}
   .store-file{display:flex;align-items:center;gap:10px;background:var(--card-in);border:1px solid var(--line);
@@ -124,9 +123,6 @@
   .store-file{border:none;width:100%;font-family:inherit;cursor:pointer;}
   .store-file .sf-view{color:var(--blue);font-size:11.5px;font-weight:700;flex-shrink:0;}
   .store-note-small{font-size:11px;color:var(--muted-dim);line-height:1.6;margin:-4px 0 12px;}
-
-  /* ---------- ป้องกันการคัดลอก/แคปแบบพยายามที่สุด (ไม่ใช่การบล็อกจริง — ดูคำอธิบายในแชท) ----------
-     ใช้เฉพาะหน้าคลังไฟล์และตัวดูไฟล์ ตามที่ขอ ส่วนหน้าอื่นของแอปยังแคปได้ปกติเพื่อแจ้งบั๊ก */
   .nocapture, .nocapture *{
     -webkit-user-select:none; user-select:none;
     -webkit-touch-callout:none;
@@ -148,8 +144,6 @@
     backdrop-filter:blur(18px);align-items:center;justify-content:center;color:var(--muted);
     font-size:12.5px;text-align:center;padding:20px;}
   .pdf-blurguard.show{display:flex;}
-
-  /* ---------- คลังไฟล์: ค้นหา + แท็บหมวดหมู่ (รองรับไฟล์เยอะ/เพิ่มเรื่อยๆ) ---------- */
   .store-toolbar{margin-bottom:10px;}
   .store-search{width:100%;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
     border-radius:10px;font-family:inherit;font-size:12.5px;padding:10px 12px;box-sizing:border-box;}
@@ -159,14 +153,12 @@
   .store-cattabs::-webkit-scrollbar{display:none;}
   .store-cattab{flex-shrink:0;background:var(--card-in);border:1px solid var(--line);color:var(--muted);
     border-radius:20px;font-family:inherit;font-size:11.5px;font-weight:600;padding:7px 13px;cursor:pointer;white-space:nowrap;}
-  .store-cattab.active{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .store-cattab.active{background:rgba(251,191,36,.14);border-color:var(--amber);color:var(--amber);}
   .store-grouphead{font-size:11px;font-weight:700;color:var(--muted-dim);letter-spacing:.3px;
     margin:16px 0 8px;padding-left:2px;}
   .store-grouphead:first-child{margin-top:0;}
-
-  /* ---------- fitness pass/fail checklist ---------- */
   .fitreadywrap{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);
-    border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+    border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .fitring{position:relative;width:76px;height:76px;flex-shrink:0;border-radius:50%;
     display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--ink);
     background:conic-gradient(var(--green) calc(var(--fitpct,0)*1%), var(--line-soft) 0);}
@@ -175,22 +167,21 @@
   .fitring span small{display:block;font-size:9px;font-weight:500;color:var(--muted-dim);}
   .fitreadytext{flex:1;font-size:12.5px;color:var(--muted);line-height:1.5;}
   .fitreadytext b{color:var(--ink);}
-  .fittest{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:10px;}
+  .fittest{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .fittest .fthead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:9px;}
   .ftname{font-size:13.5px;font-weight:600;}
   .ftcriteria{font-size:11px;color:var(--muted-dim);margin-top:2px;}
   .ftstatus{flex-shrink:0;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;
     background:var(--card-in);color:var(--muted-dim);}
-  .ftstatus.pass{background:rgba(102,181,134,.16);color:var(--green);}
-  .ftstatus.good{background:rgba(111,173,224,.16);color:var(--blue);}
-  .ftstatus.great{background:rgba(255,176,71,.18);color:var(--amber);}
-  .ftstatus.fail{background:rgba(241,106,68,.16);color:var(--red);}
+  .ftstatus.pass{background:rgba(16,185,129,.16);color:var(--green);}
+  .ftstatus.good{background:rgba(59,130,246,.16);color:var(--blue);}
+  .ftstatus.great{background:rgba(251,191,36,.18);color:var(--amber);}
+  .ftstatus.fail{background:rgba(239,68,68,.16);color:var(--red);}
   .ftrow{display:flex;gap:8px;align-items:center;}
   .ftrow input{flex:1;background:var(--card-in);border:1px solid var(--line);border-radius:8px;color:var(--ink);
     font-family:inherit;font-size:13px;padding:8px 10px;min-width:0;}
   .ftrow button{flex-shrink:0;background:var(--amber);color:#1a1400;border:none;border-radius:8px;
     font-family:inherit;font-weight:600;font-size:12px;padding:8px 12px;cursor:pointer;}
-  /* ---------- display settings bar: theme (compact icons) + brightness + language ---------- */
   .dispbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:10px auto 0;max-width:360px;}
   .dispgroup{display:flex;align-items:center;gap:5px;}
   .icbtn{width:30px;height:30px;border-radius:50%;background:var(--card);border:1px solid var(--line);
@@ -198,7 +189,7 @@
   .icbtn.active{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber);}
   .langbtn{width:30px;height:30px;border-radius:8px;background:var(--card);border:1px solid var(--line);color:var(--muted);
     display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;cursor:pointer;padding:0;flex-shrink:0;}
-  .langbtn.active{border-color:var(--blue);color:var(--blue);background:rgba(111,173,224,.1);}
+  .langbtn.active{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,.1);}
   .dispdivider{width:1px;height:20px;background:var(--line);flex-shrink:0;}
   .brightwrap{display:flex;align-items:center;gap:6px;width:100%;max-width:280px;margin:2px auto 0;}
   .brightwrap .bic{font-size:11px;color:var(--muted-dim);flex-shrink:0;}
@@ -208,80 +199,68 @@
   .eyebrow{font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:500;text-transform:uppercase;}
   h1{font-size:22px;font-weight:700;margin:4px 0 2px;}
   .sub{font-size:12.5px;color:var(--muted);}
-
-  .progresswrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;}
+  .progresswrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .progresswrap .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
   .progresswrap .row b{color:var(--amber);font-weight:600;}
   .bar{height:8px;border-radius:6px;background:var(--line-soft);overflow:hidden;}
   .bar-fill{height:100%;background:linear-gradient(90deg,var(--amber),#ffd08a);border-radius:6px;transition:width .3s;}
-
-  /* ---------- police track picker ---------- */
   .trackwrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;}
   .trackwrap .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
   .trackbtns{display:flex;gap:8px;}
   .trackbtn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:10px;
     font-family:inherit;font-size:12.5px;font-weight:500;padding:9px 6px;cursor:pointer;text-align:center;}
-  .trackbtn.active{background:rgba(111,173,224,.14);border-color:var(--blue);color:var(--blue);font-weight:600;}
+  .trackbtn.active{background:rgba(59,130,246,.14);border-color:var(--blue);color:var(--blue);font-weight:600;}
   .trackbanner{margin-top:9px;font-size:11.5px;color:var(--muted-dim);line-height:1.5;padding-top:9px;border-top:1px dashed var(--line);display:none;}
   .trackbanner.show{display:block;}
   .trackbanner b{color:var(--blue);}
   .examnav{display:flex;gap:8px;margin-top:10px;}
   .examnavbtn{flex:1;background:var(--card);border:1px solid var(--purple);color:var(--purple);border-radius:10px;
     font-family:inherit;font-size:11.5px;font-weight:600;padding:9px 6px;cursor:pointer;text-align:center;}
-  .examnavbtn:active{background:rgba(171,158,255,.14);}
-
-  /* ---------- exam category picker ---------- */
+  .examnavbtn:active{background:rgba(139,92,246,.14);}
   .examcatwrap{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;}
   .examcatwrap .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
   .examcatgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
   .examcatbtn{background:var(--card);border:1px solid var(--purple);color:var(--purple);border-radius:10px;
     font-family:inherit;font-size:11px;font-weight:600;padding:10px 4px;cursor:pointer;text-align:center;line-height:1.4;}
-  .examcatbtn:active{background:rgba(171,158,255,.14);}
+  .examcatbtn:active{background:rgba(139,92,246,.14);}
   .timedrow{display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px dashed var(--line);}
   .timedrow label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;}
   .timedrow input[type="checkbox"]{width:16px;height:16px;accent-color:var(--amber);cursor:pointer;}
-  .examtimer{display:none;font-family:monospace,'Kanit';font-size:13px;font-weight:700;color:var(--amber);
+  .examtimer{display:none;font-family:monospace,'IBM Plex Sans Thai';font-size:13px;font-weight:700;color:var(--amber);
     background:var(--card-in);border:1px solid var(--amber);border-radius:20px;padding:4px 12px;margin-top:8px;}
   .examtimer.show{display:inline-block;}
   .examtimer.warn{color:var(--red);border-color:var(--red);}
-
-  /* ---------- data backup box ---------- */
-  .databox{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;}
+  .databox{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .databox .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
   .databtns{display:flex;gap:8px;}
   .databtn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
     font-family:inherit;font-size:12px;font-weight:600;padding:10px 6px;cursor:pointer;text-align:center;}
   .databtn:active{background:var(--card-in);border-color:var(--green);color:var(--green);}
   .datamsg{font-size:11px;color:var(--muted-dim);margin-top:7px;line-height:1.5;}
-
-  /* ---------- exam screen ---------- */
   #examscreen{display:none;}
   #examscreen.active{display:block;}
   .examscore{margin-top:9px;font-size:12px;color:var(--muted);background:var(--card-in);border:1px solid var(--line);
     border-radius:10px;padding:8px 12px;}
   .examscore b{color:var(--amber);}
-  .examq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+  .examq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .examq .eqhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;}
   .examq .eqnum{font-size:10.5px;color:var(--purple);font-weight:600;letter-spacing:.05em;}
-  .examq .eqcat{font-size:10px;font-weight:600;color:var(--blue);background:rgba(111,173,224,.12);border:1px solid rgba(111,173,224,.35);
+  .examq .eqcat{font-size:10px;font-weight:600;color:var(--blue);background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35);
     border-radius:20px;padding:2px 9px;white-space:nowrap;}
   .examq .eqtext{font-size:13.5px;font-weight:500;margin-bottom:11px;line-height:1.55;}
   .echoice{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:var(--card-in);border:1px solid var(--line);color:var(--ink);
     border-radius:10px;font-family:inherit;font-size:13px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
   .echoice:last-child{margin-bottom:0;}
-  .echoice.correct{background:rgba(102,181,134,.15);border-color:var(--green);color:var(--green);font-weight:600;}
-  .echoice.wrong{background:rgba(241,106,68,.15);border-color:var(--red);color:var(--red);}
-  /* ไอคอน ✓/✗ ประกอบสี ไม่ให้ผู้ใช้ที่แยกสีลำบากต้องพึ่งสีอย่างเดียว */
+  .echoice.correct{background:rgba(16,185,129,.15);border-color:var(--green);color:var(--green);font-weight:600;animation:correctPop .3s ease;}
+  @keyframes correctPop{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+  .echoice.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);}
   .echoice .eicon{flex-shrink:0;font-weight:700;font-size:13px;display:none;}
   .echoice.correct .eicon.ic-correct{display:inline;color:var(--green);}
   .echoice.wrong .eicon.ic-wrong{display:inline;color:var(--red);}
   .eexplain{margin-top:11px;font-size:12.5px;line-height:1.6;color:var(--muted);padding-top:10px;
     border-top:1px dashed var(--line);display:none;}
   .eexplain.show{display:block;}
-
   .eexplain b{color:var(--amber);}
-
-  /* ---------- roadmap ---------- */
   #roadmap{display:none;}
   #roadmap.active{display:block;}
   .rmap{position:relative;padding-left:34px;}
@@ -292,7 +271,7 @@
   .section-label .sl-sub{font-size:10.5px;color:var(--muted-dim);margin-top:1px;}
   .node.police .dot{border-color:var(--purple);}
   .node.police.done .dot{background:var(--green);border-color:var(--green);}
-  .node.police .ntag{background:rgba(171,158,255,.14);color:var(--purple);}
+  .node.police .ntag{background:rgba(139,92,246,.14);color:var(--purple);}
   .node{position:relative;margin-bottom:12px;cursor:pointer;}
   .node .dot{position:absolute;left:-34px;top:14px;width:26px;height:26px;border-radius:50%;
     background:var(--card-in);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
@@ -300,50 +279,44 @@
   .node.done .dot{background:var(--green);border-color:var(--green);color:#0c1a10;}
   .node.done .dot::after{content:'✓';}
   .node.done .dot span{display:none;}
-  .node .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;transition:border-color .15s;}
+  .node .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;transition:border-color .15s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .node:active .card{border-color:var(--amber);}
-  .node.done .card{border-color:rgba(102,181,134,.4);}
+  .node.done .card{border-color:rgba(16,185,129,.4);}
   .ntitle{font-size:14.5px;font-weight:600;margin-bottom:2px;}
   .nsub{font-size:11.5px;color:var(--muted);line-height:1.4;}
   .ntag{display:inline-block;margin-top:6px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;
-    background:rgba(255,176,71,.14);color:var(--amber);letter-spacing:.02em;}
-
-  /* ---------- lesson ---------- */
+    background:rgba(251,191,36,.14);color:var(--amber);letter-spacing:.02em;}
   #lesson{display:none;}
   #lesson.active{display:block;}
   .backbtn{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);color:var(--ink);
     font-family:inherit;font-size:13.5px;font-weight:600;padding:10px 14px;margin:0 0 12px;cursor:pointer;
-    border-radius:12px;position:sticky;top:10px;z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.35);width:100%;}
-  .backbtn:active{color:var(--amber);border-color:var(--amber);}
+    border-radius:50px;position:sticky;top:10px;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.2);backdrop-filter:blur(4px);width:100%;}
+  .backbtn:active{transform:scale(0.96);color:var(--amber);border-color:var(--amber);}
   .lhead{margin-bottom:14px;}
   .lhead .ltag{font-size:10.5px;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;font-weight:600;}
   .lhead h2{font-size:20px;font-weight:700;margin:4px 0 4px;}
   .lhead p{font-size:13px;color:var(--muted);line-height:1.5;margin:0;}
-
-  .block{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:12px;}
+  .block{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .block h3{font-size:13.5px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
   .block h3 .ic{font-size:15px;}
   .explain li{font-size:13.5px;line-height:1.65;color:var(--ink);margin-bottom:7px;}
   .explain li:last-child{margin-bottom:0;}
   .explain b{color:var(--amber);font-weight:600;}
-
   .ex-problem{background:var(--card-in);border:1px solid var(--line);border-radius:10px;padding:10px 13px;
-    font-family:monospace,'Kanit';font-size:16px;font-weight:600;color:var(--amber);margin-bottom:10px;text-align:center;}
+    font-family:monospace,'IBM Plex Sans Thai';font-size:16px;font-weight:600;color:var(--amber);margin-bottom:10px;text-align:center;}
   .step{display:flex;gap:10px;margin-bottom:10px;}
   .step:last-child{margin-bottom:0;}
   .step .snum{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--card-in);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--amber);}
   .step .stxt{font-size:13.5px;line-height:1.55;padding-top:2px;}
-  .step .stxt .calc{display:block;font-family:monospace,'Kanit';color:var(--amber);margin-top:3px;font-size:13px;}
+  .step .stxt .calc{display:block;font-family:monospace,'IBM Plex Sans Thai';color:var(--amber);margin-top:3px;font-size:13px;}
   .ex-answer{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;
     align-items:center;font-size:13.5px;font-weight:600;}
-  .ex-answer .v{color:var(--green);font-family:monospace,'Kanit';font-size:15px;}
-
-  .tipbox{background:rgba(255,176,71,.08);border:1px solid rgba(255,176,71,.35);border-radius:12px;padding:12px 14px;margin-bottom:12px;}
+  .ex-answer .v{color:var(--green);font-family:monospace,'IBM Plex Sans Thai';font-size:15px;}
+  .tipbox{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:12px 14px;margin-bottom:12px;}
   .tipbox h3{color:var(--amber);}
   .tipbox p{font-size:13px;line-height:1.6;margin:0;color:var(--ink);}
   .tipbox p+p{margin-top:6px;}
-
   .q{border-bottom:1px solid var(--line-soft);padding:12px 0;}
   .q:first-child{padding-top:0;}
   .q:last-child{border-bottom:none;padding-bottom:0;}
@@ -355,48 +328,37 @@
   .q-row button{flex-shrink:0;background:var(--amber);color:#1a1400;border:none;border-radius:8px;
     font-family:inherit;font-weight:600;font-size:12.5px;padding:9px 13px;cursor:pointer;}
   .q-fb{margin-top:7px;font-size:12.5px;line-height:1.5;padding:8px 10px;border-radius:8px;display:none;}
-  .q-fb.ok{display:block;background:rgba(102,181,134,.13);color:var(--green);border:1px solid rgba(102,181,134,.35);}
-  .q-fb.no{display:block;background:rgba(241,106,68,.13);color:var(--red);border:1px solid rgba(241,106,68,.35);}
+  .q-fb.ok{display:block;background:rgba(16,185,129,.13);color:var(--green);border:1px solid rgba(16,185,129,.35);}
+  .q-fb.no{display:block;background:rgba(239,68,68,.13);color:var(--red);border:1px solid rgba(239,68,68,.35);}
   .q-hintbtn{background:none;border:none;color:var(--blue);font-family:inherit;font-size:11.5px;font-weight:600;
     padding:6px 0 0;cursor:pointer;display:flex;align-items:center;gap:4px;}
   .q-hintbtn:active{opacity:.7;}
   .q-hintbox{margin-top:6px;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:8px;display:none;
-    background:rgba(111,173,224,.1);color:var(--blue);border:1px dashed rgba(111,173,224,.4);}
+    background:rgba(59,130,246,.1);color:var(--blue);border:1px dashed rgba(59,130,246,.4);}
   .q-hintbox.show{display:block;}
-
   .donebtn{width:100%;background:var(--green);color:#0c1a10;border:none;border-radius:12px;font-family:inherit;
     font-weight:600;font-size:14px;padding:13px;cursor:pointer;margin-top:4px;}
   .donebtn.isdone{background:var(--card-in);color:var(--muted);border:1px solid var(--line);}
   .donebtn:active{transform:scale(.98);}
-
   .navrow{display:flex;gap:8px;margin-top:10px;}
   .navrow button{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--ink);border-radius:10px;
     font-family:inherit;font-size:12.5px;padding:10px;cursor:pointer;}
   .navrow button:disabled{opacity:.35;}
-
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);
     border:1px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:20px;font-size:12.5px;
     box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:.25s;pointer-events:none;z-index:50;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  /* ---------- subject tabs ---------- */
   .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
   .tab{flex:1;min-width:74px;background:var(--card-in);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:10px 5px;cursor:pointer;font-family:inherit;font-weight:600;font-size:12px;text-align:center;}
   .tab.active{background:var(--amber);color:#1a1400;border-color:var(--amber);}
-
-  /* ---------- tool buttons ---------- */
   .tool-btns{display:flex;gap:8px;margin-bottom:12px;}
   .tool-btn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;padding:10px 5px;cursor:pointer;}
   .tool-btn:active{background:var(--card-in);border-color:var(--amber);color:var(--amber);}
-
-  /* ---------- safety box ---------- */
-  .safetybox{background:rgba(255,176,71,.08);border:1px solid var(--amber);border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.7;}
+  .safetybox{background:rgba(251,191,36,.08);border:1px solid var(--amber);border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.7;}
   .safetybox .stitle{font-weight:700;color:var(--amber);margin-bottom:4px;}
   .safetybox ul{margin:0;padding-left:20px;color:var(--muted);}
   .safetybox strong{color:var(--ink);}
-  .safetybox code{background:#1F2327;padding:1px 6px;border-radius:4px;}
-
-  /* ---------- flashcard modal ---------- */
+  .safetybox code{background:#1E293B;padding:1px 6px;border-radius:4px;}
   .fc-overlay{position:fixed;inset:0;background:rgba(10,11,13,.72);display:none;align-items:center;justify-content:center;z-index:80;padding:16px;}
   .fc-overlay.show{display:flex;}
   .fc-modal{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
@@ -414,21 +376,19 @@
     font-family:inherit;font-size:12.5px;font-weight:600;padding:11px;cursor:pointer;}
   .fc-nav button:disabled{opacity:.35;}
   .fc-nav button.primary{background:var(--amber);color:#1a1400;border-color:var(--amber);}
-
-  /* ---------- exam controls (timer + shuffle) ---------- */
-  .examctrl{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;}
+  .examctrl{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .examctrl .tlabel{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
   .examctrlrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   .examctrlbtn{flex:1;min-width:100px;background:var(--card);border:1px solid var(--purple);color:var(--purple);border-radius:10px;
     font-family:inherit;font-size:12px;font-weight:600;padding:9px 8px;cursor:pointer;text-align:center;}
-  .examctrlbtn:active{background:rgba(171,158,255,.14);}
-  .examctrlbtn.on{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .examctrlbtn:active{background:rgba(139,92,246,.14);}
+  .examctrlbtn.on{background:rgba(251,191,36,.14);border-color:var(--amber);color:var(--amber);}
   .examdursel{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
     font-family:inherit;font-size:12px;padding:9px 8px;}
   .examcatfilter{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px;}
   .examcatchip{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:20px;
     font-family:inherit;font-size:11px;font-weight:600;padding:7px 12px;cursor:pointer;}
-  .examcatchip.active{background:rgba(111,173,224,.14);border-color:var(--blue);color:var(--blue);}
+  .examcatchip.active{background:rgba(59,130,246,.14);border-color:var(--blue);color:var(--blue);}
   .examsetrow{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
   .examsetrow .esetlabel{font-size:11.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
   .examsetinputs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -443,21 +403,19 @@
   .examtimehint button{background:none;border:1px solid var(--amber);color:var(--amber);border-radius:20px;
     font-family:inherit;font-size:10.5px;font-weight:600;padding:2px 9px;cursor:pointer;margin:0 2px;}
   .examtimehint .hintcaveat{display:block;margin-top:3px;color:var(--muted-dim);}
-  .examtimerbig{display:none;text-align:center;font-family:monospace,'Kanit';font-size:26px;font-weight:700;
+  .examtimerbig{display:none;text-align:center;font-family:monospace,'IBM Plex Sans Thai';font-size:26px;font-weight:700;
     color:var(--amber);background:var(--card);border:1px solid var(--amber);border-radius:12px;padding:8px;margin-top:10px;}
   .examtimerbig.show{display:block;}
   .examtimerbig.warn{color:var(--red);border-color:var(--red);animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
-  .examdone{display:none;background:rgba(102,181,134,.1);border:1px solid var(--green);border-radius:12px;
+  .examdone{display:none;background:rgba(16,185,129,.1);border:1px solid var(--green);border-radius:12px;
     padding:12px 14px;margin-bottom:12px;text-align:center;}
   .examdone.show{display:block;}
   .examdone .edscore{font-size:24px;font-weight:700;color:var(--green);}
   .examdone .edlabel{font-size:12px;color:var(--muted);margin-top:2px;}
-
-  /* ---------- fitness screen ---------- */
   #fitnessscreen{display:none;}
   #fitnessscreen.active{display:block;}
-  .fitwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+  .fitwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .fitwrap h3{font-size:13.5px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
   .fitcriteria{width:100%;border-collapse:collapse;font-size:12px;}
   .fitcriteria th,.fitcriteria td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line-soft);}
@@ -469,8 +427,8 @@
   .fitweek:last-child{border-bottom:none;}
   .fitweek .fwname{font-weight:600;color:var(--ink);}
   .fitweek .fwtarget{color:var(--muted);font-size:11.5px;text-align:right;}
-  .swbox{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;}
-  .swdisplay{font-family:monospace,'Kanit';font-size:40px;font-weight:700;color:var(--amber);margin-bottom:14px;letter-spacing:.02em;}
+  .swbox{background:var(--card-in);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+  .swdisplay{font-family:monospace,'IBM Plex Sans Thai';font-size:40px;font-weight:700;color:var(--amber);margin-bottom:14px;letter-spacing:.02em;}
   .swbtns{display:flex;gap:8px;}
   .swbtns button{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;
     font-family:inherit;font-size:13px;font-weight:600;padding:12px;cursor:pointer;}
@@ -478,24 +436,20 @@
   .swbtns button.swstop{background:var(--red);color:#2a0e06;border-color:var(--red);}
   .swlaps{margin-top:12px;max-height:120px;overflow-y:auto;text-align:left;}
   .swlaps .swlap{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:5px 8px;
-    border-bottom:1px solid var(--line-soft);font-family:monospace,'Kanit';}
-
-  /* ---------- dashboard screen ---------- */
+    border-bottom:1px solid var(--line-soft);font-family:monospace,'IBM Plex Sans Thai';}
   #dashboardscreen{display:none;}
   #dashboardscreen.active{display:block;}
-  .dashcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+  .dashcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .dashcard h3{font-size:13.5px;font-weight:600;margin:0 0 12px;display:flex;align-items:center;gap:7px;}
   .dashrow{margin-bottom:11px;}
   .dashrow:last-child{margin-bottom:0;}
   .dashrow .drtop{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;}
   .dashrow .drtop b{color:var(--ink);font-weight:600;}
-  .dashrow .drtop span{color:var(--muted-dim);font-family:monospace,'Kanit';}
+  .dashrow .drtop span{color:var(--muted-dim);font-family:monospace,'IBM Plex Sans Thai';}
   .dashbar{height:7px;border-radius:5px;background:var(--line-soft);overflow:hidden;}
   .dashbar .dashbar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),#9fd0f0);}
   .dashbar .dashbar-fill.amber{background:linear-gradient(90deg,var(--amber),#ffd08a);}
   .dashempty{font-size:12px;color:var(--muted-dim);text-align:center;padding:10px 0;}
-
-  /* ---------- streak counter + activity heatmap ---------- */
   .streakrow{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line);}
   .streaknum{font-size:30px;font-weight:700;color:var(--amber);line-height:1;}
   .streaklabel{font-size:11.5px;color:var(--muted);line-height:1.4;}
@@ -509,12 +463,10 @@
   .heat-cell.l4{background:var(--amber);}
   .heatmap-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:6px;font-size:10px;color:var(--muted-dim);}
   .heatmap-legend .heat-cell{width:9px;height:9px;}
-
-  /* ---------- weak points ---------- */
   .weaktabs{display:flex;gap:6px;margin-bottom:10px;}
   .weaktab{flex:1;background:var(--card-in);border:1px solid var(--line);color:var(--muted);border-radius:8px;
     font-family:inherit;font-size:11px;font-weight:600;padding:7px 4px;cursor:pointer;text-align:center;}
-  .weaktab.active{background:rgba(255,176,71,.14);border-color:var(--amber);color:var(--amber);}
+  .weaktab.active{background:rgba(251,191,36,.14);border-color:var(--amber);color:var(--amber);}
   .weakitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line-soft);}
   .weakitem:last-child{border-bottom:none;}
   .weakinfo{flex:1;min-width:0;}
@@ -522,12 +474,10 @@
   .weakpct{font-size:11px;color:var(--red);}
   .weakbtn{background:var(--card);border:1px solid var(--amber);color:var(--amber);border-radius:8px;
     font-family:inherit;font-size:11px;font-weight:600;padding:7px 9px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-
-  /* ---------- daily challenge banner + overlay ---------- */
-  .dailybanner{background:linear-gradient(135deg,rgba(255,176,71,.16),rgba(255,176,71,.05));
-    border:1px solid var(--amber);border-radius:14px;padding:12px 14px;margin-bottom:14px;
-    display:flex;align-items:center;gap:10px;cursor:pointer;}
-  .dailybanner .dbicon{font-size:24px;flex-shrink:0;}
+  .dailybanner{background:linear-gradient(135deg, rgba(59,130,246,.2), rgba(251,191,36,.1));
+    border:1px solid rgba(59,130,246,.4);border-radius:16px;padding:12px 14px;margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.2);}
+  .dailybanner .dbicon{font-size:28px;text-shadow:0 0 10px rgba(251,191,36,.6);}
   .dailybanner .dbtext{flex:1;min-width:0;}
   .dailybanner .dbtitle{font-size:13px;font-weight:700;color:var(--amber);}
   .dailybanner .dbsub{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -542,8 +492,6 @@
   .daily-progress{font-size:11.5px;color:var(--muted);margin-bottom:10px;}
   .daily-done-box{text-align:center;padding:30px 10px;}
   .daily-done-box .ddscore{font-size:32px;font-weight:700;color:var(--amber);margin-bottom:6px;}
-
-  /* ---------- vocab matching game ---------- */
   #vocabScreen{display:none;}
   #vocabScreen.active{display:block;}
   .vocab-stats{display:flex;gap:10px;margin-bottom:12px;}
@@ -554,9 +502,9 @@
   .vocab-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 8px;
     font-size:12.5px;text-align:center;cursor:pointer;min-height:52px;display:flex;align-items:center;justify-content:center;
     line-height:1.35;word-break:break-word;}
-  .vocab-card.selected{border-color:var(--blue);background:rgba(111,173,224,.14);color:var(--blue);}
-  .vocab-card.matched{border-color:var(--green);background:rgba(102,181,134,.14);color:var(--green);opacity:.6;cursor:default;}
-  .vocab-card.wrong{border-color:var(--red);background:rgba(241,106,68,.14);}
+  .vocab-card.selected{border-color:var(--blue);background:rgba(59,130,246,.14);color:var(--blue);}
+  .vocab-card.matched{border-color:var(--green);background:rgba(16,185,129,.14);color:var(--green);opacity:.6;cursor:default;}
+  .vocab-card.wrong{border-color:var(--red);background:rgba(239,68,68,.14);}
   .vocab-done-box{text-align:center;padding:30px 10px;}
   .vocab-done-box .vdtime{font-size:32px;font-weight:700;color:var(--green);margin-bottom:6px;}
   .countdownwrap{text-align:center;padding:6px 0;}
@@ -567,7 +515,7 @@
     font-family:inherit;font-size:13px;padding:9px 10px;}
   .countdownset button{background:var(--amber);color:#1a1400;border:none;border-radius:10px;font-family:inherit;
     font-weight:600;font-size:12.5px;padding:9px 14px;cursor:pointer;}
-
+  @keyframes screenIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 </style>
 </head>
 <body>
