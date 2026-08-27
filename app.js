@@ -1254,37 +1254,43 @@ if($('vocabBackBtn')){
 if($('vocabShuffleBtn')) $('vocabShuffleBtn').addEventListener('click', ()=> newVocabRound());
 
 /* ============== ร้านค้า / คลังไฟล์เอกสาร ==============
-   แก้ไขรายการนี้ได้เลย: ใส่ path ไฟล์ PDF จริงที่ href
-   - ไฟล์ในโปรเจกต์เอง: วางไฟล์ไว้ในโฟลเดอร์ "files/" แล้วใส่ href เป็น "files/exam-admin-1.pdf"
-     (แบบนี้เปิดออฟไลน์ได้หลัง service worker แคชไว้ครั้งแรก)
-   - ลิงก์นอก (Google Drive แบบเปิดสาธารณะ, GitHub raw ฯลฯ) ก็ใช้ได้ แต่จะเปิดออนไลน์เท่านั้น
-     และปุ่ม "ดาวน์โหลด" อาจกดไม่ได้ผลกับบางลิงก์ (ตัวเบราว์เซอร์เป็นคนคุม ไม่ใช่แอป)
-   downloadable: true  → มีปุ่มดาวน์โหลดให้ในตัวดูไฟล์
-   downloadable: false → เปิดดูในแอปได้อย่างเดียว ไม่มีปุ่มดาวน์โหลดให้ (ป้องกันเบื้องต้น ไม่ใช่บล็อกจริง 100%) */
-const STORE_ITEMS = [
-  {
-    title:'ข้อสอบปราบปราม ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📘',
-    files:[
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'#', downloadable:true},
-      {label:'กระดาษคำตอบ', ext:'PDF', href:'#', downloadable:true},
-      {label:'เฉลยละเอียด', ext:'PDF', href:'#', downloadable:false}
-    ]
-  },
-  {
-    title:'ข้อสอบอำนวยการ ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📗',
-    files:[
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'#', downloadable:true},
-      {label:'กระดาษคำตอบ', ext:'PDF', href:'#', downloadable:true},
-      {label:'เฉลยละเอียด', ext:'PDF', href:'#', downloadable:false}
-    ]
-  }
-];
+   รายการไฟล์ (STORE_ITEMS) อยู่ในไฟล์ store-data.js แยกต่างหากแล้ว
+   เพิ่ม/แก้ไฟล์เอกสารได้ที่นั่นโดยไม่ต้องยุ่งกับไฟล์นี้เลย — รองรับไฟล์เยอะๆ และเพิ่มเรื่อยๆ ได้สบาย */
+let storeActiveCat = 'ทั้งหมด';
+function storeCategories(){
+  const set = new Set(['ทั้งหมด']);
+  STORE_ITEMS.forEach(it=> set.add(it.category || 'ทั่วไป'));
+  return [...set];
+}
+function renderStoreCatTabs(){
+  const wrap = $('storeCatTabs');
+  if(!wrap) return;
+  const cats = storeCategories();
+  if(cats.length <= 2){ wrap.innerHTML=''; wrap.style.display='none'; return; } // ไม่ต้องโชว์แท็บถ้ามีหมวดเดียว
+  wrap.style.display='';
+  wrap.innerHTML = cats.map(c=>
+    `<button type="button" class="store-cattab${c===storeActiveCat?' active':''}" onclick="storeSelectCat('${c.replace(/'/g,"\\'")}')">${c}</button>`
+  ).join('');
+}
+function storeSelectCat(cat){
+  storeActiveCat = cat;
+  renderStoreCatTabs();
+  renderStoreList();
+}
 function renderStoreList(){
   const list = $('storeList');
   if(!list) return;
   if(!STORE_ITEMS.length){ list.innerHTML = '<div class="dashempty">ยังไม่มีเอกสารในขณะนี้</div>'; return; }
+  const q = ($('storeSearch') && $('storeSearch').value || '').trim().toLowerCase();
+  let items = STORE_ITEMS.map((it,ii)=>({...it, _idx:ii, category: it.category || 'ทั่วไป'}));
+  if(storeActiveCat !== 'ทั้งหมด') items = items.filter(it=> it.category === storeActiveCat);
+  if(q) items = items.filter(it=>
+    it.title.toLowerCase().includes(q) || it.files.some(f=> (f.label||'').toLowerCase().includes(q))
+  );
+  if(!items.length){ list.innerHTML = '<div class="dashempty">ไม่พบเอกสารที่ค้นหา</div>'; return; }
+
   const extColor = {PDF:'#C6482A', DOC:'#2E76B5', XLS:'#3F8F5F'};
-  list.innerHTML = STORE_ITEMS.map((item,ii)=>`
+  const cardHtml = (item)=>`
     <div class="store-card">
       <div class="store-top">
         <div class="store-thumb">${item.icon||'📄'}</div>
@@ -1294,20 +1300,34 @@ function renderStoreList(){
         </div>
       </div>
       <div class="store-files">
-        ${item.files.map((f,fi)=>`<button type="button" class="store-file" onclick="openPdfViewer(${ii},${fi})">
+        ${item.files.map((f,fi)=>`<button type="button" class="store-file" onclick="openPdfViewer(${item._idx},${fi})">
           <span class="sf-ic" style="background:${extColor[f.ext]||'#767D84'}">${f.ext}</span>
           <span class="sf-name">${f.label}</span>
           <span class="sf-view">เปิดดู ›</span>
         </button>`).join('')}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+
+  // โหมด "ทั้งหมด" + ไม่ได้ค้นหา → จัดกลุ่มตามหมวดให้ดูง่ายเวลามีไฟล์เยอะ
+  if(storeActiveCat === 'ทั้งหมด' && !q){
+    const groups = {};
+    items.forEach(it=>{ (groups[it.category] = groups[it.category]||[]).push(it); });
+    list.innerHTML = Object.keys(groups).map(cat=>
+      `<div class="store-grouphead">${cat}</div>${groups[cat].map(cardHtml).join('')}`
+    ).join('');
+  } else {
+    list.innerHTML = items.map(cardHtml).join('');
+  }
 }
 function openStoreScreen(){
+  storeActiveCat = 'ทั้งหมด';
+  if($('storeSearch')) $('storeSearch').value = '';
+  renderStoreCatTabs();
   renderStoreList();
   showScreen('storescreen');
 }
 if($('storeBackBtn')) $('storeBackBtn').addEventListener('click', goRoadmapTab);
+if($('storeSearch')) $('storeSearch').addEventListener('input', renderStoreList);
 
 /* ============== ตัวดูไฟล์ในแอป (เปิด PDF โดยไม่ออกจากแอป) ==============
    หมายเหตุสำคัญ: เว็บแอป/PWA ไม่มีสิทธิ์เข้าถึงระบบเพียงพอจะ "บล็อกการแคปหน้าจอ" ได้จริง
@@ -1325,7 +1345,7 @@ function openPdfViewer(itemIndex, fileIndex){
   const item = STORE_ITEMS[itemIndex];
   const file = item && item.files[fileIndex];
   if(!file) return;
-  if(file.href === '#'){ showToast('ยังไม่ได้แนบไฟล์นี้ — ใส่ path ที่ STORE_ITEMS ใน app.js'); return; }
+  if(file.href === '#'){ showToast('ยังไม่ได้แนบไฟล์นี้ — ใส่ path ที่ STORE_ITEMS ใน store-data.js'); return; }
   $('pdfTitle').textContent = `${item.title} · ${file.label}`;
   $('pdfFrame').src = file.href;
   const dlBtn = $('pdfDlBtn');

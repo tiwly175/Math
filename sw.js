@@ -1,5 +1,5 @@
 // sw.js — แคชไฟล์หลักของแอปไว้ใช้งานออฟไลน์หลังโหลดครั้งแรก
-const CACHE_NAME = 'police-prep-cache-v1';
+const CACHE_NAME = 'police-prep-cache-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   './data.js',
   './exam-data.js',
   './exam-generators.js',
+  './store-data.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
