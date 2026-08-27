@@ -26,15 +26,8 @@ const STORE_ITEMS = [
     title:'ข้อสอบ (อยู่ในการเทสระบบ) ', badge:'ฟรี!', icon:'📘', category:'ปราบปราม',
     files:[
       {label:'ตัวข้อสอบ', ext:'PDF', href:'thai/หลักธรรม.pdf', downloadable:false},
-      
+      {label:'ตัวข้อสอบ', ext:'PDF', href:'thai/คำเป็น-คำตาย.pdf', downloadable:false},
     ]
   },
-  {
-    title:'ข้อสอบอำนวยการ ชุดที่ 1 · 150 ข้อ', badge:'ฟรี!', icon:'📗', category:'อำนวยการ',
-    files:[
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'#', downloadable:true},
-      {label:'กระดาษคำตอบ', ext:'PDF', href:'#', downloadable:true},
-      {label:'เฉลยละเอียด', ext:'PDF', href:'#', downloadable:false}
-    ]
-  }
+  
 ];
