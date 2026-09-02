@@ -8,12 +8,12 @@ const STORE_ITEMS = [
   {
     title: 'กฎหมายและจริยธรรม (ชุดรวม)', badge: 'PDF', icon: '⚖️', category: 'กฎหมาย',
     files: [
-      { label: 'กฎหมาย จริยธรรม อาเซียน', ext: 'PDF', href: 'files/กฎหมาย จริยธรรม อาเซียน.pdf', downloadable: false },
-      { label: 'กฎหมายที่ประชาชนควรรู้', ext: 'PDF', href: 'files/กฎหมายที่ประชาชนควรรู้.pdf', downloadable: false },
-      { label: 'กฎหมายทั่วไป', ext: 'PDF', href: 'files/กฎหหมายทั่วไป..pdf', downloadable: false },
-      { label: 'กฎหมายที่ควรทราบ', ext: 'PDF', href: 'files/กฏหมายที่ควรทราบ.pdf', downloadable: false },
-      { label: 'จริยธรรม กฎหมาย เพิ่มเติม', ext: 'PDF', href: 'files/จริยธรรม กฎหมาย เพิ่มเติม..pdf', downloadable: false },
-      { label: 'แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้', ext: 'PDF', href: 'files/แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้.pdf', downloadable: false }
+      { label: 'กฎหมาย จริยธรรม อาเซียน', ext: 'PDF', href: 'law/กฎหมาย จริยธรรม อาเซียน.pdf', downloadable: false },
+      { label: 'กฎหมายที่ประชาชนควรรู้', ext: 'PDF', href: 'law/กฎหมายที่ประชาชนควรรู้.pdf', downloadable: false },
+      { label: 'กฎหมายทั่วไป', ext: 'PDF', href: 'law/กฎหหมายทั่วไป..pdf', downloadable: false },
+      { label: 'กฎหมายที่ควรทราบ', ext: 'PDF', href: 'law/กฏหมายที่ควรทราบ.pdf', downloadable: false },
+      { label: 'จริยธรรม กฎหมาย เพิ่มเติม', ext: 'PDF', href: 'law/จริยธรรม กฎหมาย เพิ่มเติม..pdf', downloadable: false },
+      { label: 'แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้', ext: 'PDF', href: 'law/แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้.pdf', downloadable: false }
     ]
   },
   // ---------- หมวดภาษาไทย (ใช้โฟลเดอร์ thai/) ----------
