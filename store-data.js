@@ -1,57 +1,67 @@
 // store-data.js — รายการไฟล์ในคลังเอกสาร (ร้านค้า)
-// แยกออกมาจาก app.js เพื่อให้เพิ่ม/แก้ไฟล์ได้ง่าย โดยไม่ต้องแตะ app.js
-// category: ข้อความใดก็ได้ แอปจะสร้างแท็บกรองหมวดให้อัตโนมัติ
+// ไฟล์นี้แยกออกมาจาก app.js โดยเฉพาะ เพื่อให้เพิ่ม/แก้ไฟล์เอกสารได้ง่ายๆ
+// โดยไม่ต้องไปยุ่งกับโค้ดของแอป — มีไฟล์เยอะแค่ไหน หรือเพิ่มเรื่อยๆ ก็แค่ copy-paste
+// อ็อบเจกต์แบบเดิมแล้วแก้ค่า ไม่ต้องแตะ app.js เลย
 //
-// ชื่อไฟล์เก็บตามต้นฉบับของผู้ใช้ (รวมตัวสะกดที่ผิด เช่น กฏ ตํา สํา คํา เเละ หห ตร) — ไม่แก้ให้
-// href '#' = ยังไม่ได้เชื่อมลิงก์ (ผู้ใช้เติมทีหลัง)
+// วิธีเพิ่มไฟล์ใหม่:
+//   1) copy หนึ่งช่อง { ... } ในอาเรย์ STORE_ITEMS ด้านล่าง มาวางต่อท้าย (ลำดับในนี้ = ลำดับที่โชว์ในแอป
+//      รายการที่เพิ่มใหม่ควรวางไว้ "บนสุด" เพื่อให้ขึ้นก่อน)
+//   2) แก้ title / icon / badge / category ตามต้องการ
+//   3) ใส่ href ของแต่ละไฟล์:
+//        - ไฟล์ในโปรเจกต์เอง: วางไฟล์ PDF ไว้ในโฟลเดอร์ "files/" แล้วใส่ href เป็น "files/ชื่อไฟล์.pdf"
+//          (แบบนี้เปิดออฟไลน์ได้ หลัง service worker แคชไว้ตอนเปิดครั้งแรก)
+//        - ลิงก์นอก (Google Drive แบบเปิดสาธารณะ, GitHub raw ฯลฯ) ก็ใช้ได้ แต่ต้องมีเน็ตตอนเปิด
+//          และปุ่ม "ดาวน์โหลด" อาจกดไม่ได้ผล 100% กับบางลิงก์ (เบราว์เซอร์เป็นคนคุม ไม่ใช่แอป)
+//   4) downloadable: true  → มีปุ่มดาวน์โหลดให้ในตัวดูไฟล์
+//      downloadable: false → เปิดดูในแอปได้อย่างเดียว ไม่มีปุ่มดาวน์โหลด (กันเบื้องต้น ไม่ใช่บล็อกจริง 100%)
 //
-// badge: ป้ายเล็กๆ มุมซ้ายบน (เช่น 'ใหม่' 'อัปเดต')
+// หมายเหตุ (28 ไฟล์ชุดนี้): href ทุกอันใช้ path นำหน้าว่า "thai/" ตามที่ store-data.js
+//   เดิมของคุณใช้อยู่ก่อนแล้ว — ถ้าจริงๆ ไฟล์อยู่คนละโฟลเดอร์ ให้ "หาแทนที่ทั้งไฟล์" คำว่า thai/
+//   เป็นชื่อโฟลเดอร์จริงบน GitHub ทีเดียวจบ ไม่ต้องแก้ทีละบรรทัด
+//
+// category: ใส่เป็นข้อความอะไรก็ได้ (เช่น 'ปราบปราม', 'อำนวยการ', 'กฎหมาย', 'เฉลย')
+//   แอปจะไปสร้างแท็บกรองหมวดหมู่ให้เองอัตโนมัติจากค่าตรงนี้ ไม่ต้องไปประกาศรายชื่อหมวดที่ไหนอีก
+//   ถ้าไม่ใส่ category จะถูกจัดเป็น "ทั่วไป" โดยอัตโนมัติ
+//
+// badge: ใส่ 'ฟรี!' หรือข้อความอื่น เช่น 'ใหม่' 'อัปเดต' ก็ได้ (แค่เป็นป้ายเล็กๆ มุมซ้ายบน)
 
 const STORE_ITEMS = [
-  // ===== ไอเทมตัวอย่าง/เทสระบบเดิม (คงไว้ตามเดิม) =====
   {
-    title:'ข้อสอบ (อยู่ในการเทสระบบ) ', badge:'ฟรี!', icon:'📘', category:'ทั้งหมด',
+    title:'ชุดเอกสาร กฎหมาย · จริยธรรม · ความรู้ทั่วไป', badge:'ใหม่', icon:'⚖️', category:'กฎหมาย-จริยธรรม',
     files:[
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'thai/หลักธรรม.pdf', downloadable:false},
-      {label:'ตัวข้อสอบ', ext:'PDF', href:'thai/คำเป็น-คำตาย.pdf', downloadable:false},
+      {label:'กฎหมาย จริยธรรม อาเซียน', ext:'PDF', href:'thai/กฎหมาย จริยธรรม อาเซียน.pdf', downloadable:true},
+      {label:'กฎหมายที่ประชาชนควรรู้', ext:'PDF', href:'thai/กฎหมายที่ประชาชนควรรู้.pdf', downloadable:true},
+      {label:'กฎหหมายทั่วไป', ext:'PDF', href:'thai/กฎหหมายทั่วไป..pdf', downloadable:true},
+      {label:'กฏหมายที่ควรทราบ', ext:'PDF', href:'thai/กฏหมายที่ควรทราบ.pdf', downloadable:true},
+      {label:'จริยธรรม กฎหมาย เพิ่มเติม', ext:'PDF', href:'thai/จริยธรรม กฎหมาย เพิ่มเติม..pdf', downloadable:true},
+      {label:'รัฐศาสตร์', ext:'PDF', href:'thai/รัฐศาสตร์.pdf', downloadable:true},
+      {label:'สรุป พ.ร.บ. ตำรวจ', ext:'PDF', href:'thai/สรุป-พรบ.ตำรวจ.pdf', downloadable:true},
+      {label:'เศรษฐกิจพอเพียง', ext:'PDF', href:'thai/เศรษฐกิจพอเพียง.pdf', downloadable:true},
+      {label:'แนวข้อสอบวิชา กฎหมายที่ประชาชนควรรู้', ext:'PDF', href:'thai/แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้.pdf', downloadable:true},
+      {label:'จริยธรรม ตร.', ext:'PDF', href:'thai/จริยธรรม ตร.pdf', downloadable:true},
+      {label:'หลักธรรม', ext:'PDF', href:'thai/หลักธรรม.pdf', downloadable:true}
     ]
   },
-
-  // ===== ภาษาไทย (14) =====
-  { title:'โวหาร.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'โวหาร', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'การผันวรรณยุกต์.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'การผันวรรณยุกต์', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'การสร้างคํา.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'การสร้างคํา', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'การอ่านจับใจความสําคัญ.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'การอ่านจับใจความสําคัญ', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'การเขียนสะกดคํา.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'การเขียนสะกดคํา', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'การเรียงประโยค.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'การเรียงประโยค', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'คําราชาศัพท์.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'คําราชาศัพท์', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'คําเป็น-คําตาย.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'คําเป็น-คําตาย', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'ชนิดและหน้าที่ของคํา.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'ชนิดและหน้าที่ของคํา', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'ภาษาฟุ่มเฟือย.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'ภาษาฟุ่มเฟือย', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'วิชาภาษาไทย 1114 ข้อ.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'วิชาภาษาไทย 1114 ข้อ', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'สํานวนไทย.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'สํานวนไทย', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'แนวข้อสอบวิชา-ภาษาไทย.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'แนวข้อสอบวิชา-ภาษาไทย', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'ไฟล์แถม แนวข้อสอบภาษาไทย.pdf', badge:'ไทย', icon:'📘', category:'ภาษาไทย', files:[{label:'ไฟล์แถม แนวข้อสอบภาษาไทย', ext:'PDF', href:'#', downloadable:false}] },
-
-  // ===== กฎหมาย (5) =====
-  { title:'กฎหมาย จริยธรรม อาเซียน.pdf', badge:'กฎหมาย', icon:'⚖️', category:'กฎหมาย', files:[{label:'กฎหมาย จริยธรรม อาเซียน', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'กฎหมายที่ประชาชนควรรู้.pdf', badge:'กฎหมาย', icon:'⚖️', category:'กฎหมาย', files:[{label:'กฎหมายที่ประชาชนควรรู้', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'กฎหหมายทั่วไป..pdf', badge:'กฎหมาย', icon:'⚖️', category:'กฎหมาย', files:[{label:'กฎหหมายทั่วไป..', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'กฏหมายที่ควรทราบ.pdf', badge:'กฎหมาย', icon:'⚖️', category:'กฎหมาย', files:[{label:'กฏหมายที่ควรทราบ', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้.pdf', badge:'กฎหมาย', icon:'⚖️', category:'กฎหมาย', files:[{label:'แนวข้อสอบวิชา-กฎหมายที่ประชาชนควรรู้', ext:'PDF', href:'#', downloadable:false}] },
-
-  // ===== สังคม & จริยธรรม (5) =====
-  { title:'จริยธรรม กฎหมาย เพิ่มเติม..pdf', badge:'สังคม', icon:'🌏', category:'สังคม & จริยธรรม', files:[{label:'จริยธรรม กฎหมาย เพิ่มเติม..', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'รัฐศาสตร์.pdf', badge:'สังคม', icon:'🌏', category:'สังคม & จริยธรรม', files:[{label:'รัฐศาสตร์', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'เศรษฐกิจพอเพียง.pdf', badge:'สังคม', icon:'🌏', category:'สังคม & จริยธรรม', files:[{label:'เศรษฐกิจพอเพียง', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'จริยธรรม ตร.pdf', badge:'สังคม', icon:'🌏', category:'สังคม & จริยธรรม', files:[{label:'จริยธรรม ตร', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'หลักธรรม.pdf', badge:'สังคม', icon:'🌏', category:'สังคม & จริยธรรม', files:[{label:'หลักธรรม', ext:'PDF', href:'#', downloadable:false}] },
-
-  // ===== ตำรวจ (2) =====
-  { title:'สรุป-พรบ.ตํารวจ.pdf', badge:'ตำรวจ', icon:'🚓', category:'ตำรวจ', files:[{label:'สรุป-พรบ.ตํารวจ', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'ระเบียบงานสารบรรณ 90 ข้อ.pdf', badge:'ตำรวจ', icon:'🚓', category:'ตำรวจ', files:[{label:'ระเบียบงานสารบรรณ 90 ข้อ', ext:'PDF', href:'#', downloadable:false}] },
-
-  // ===== ความรู้ความสามารถทั่วไป (2) =====
-  { title:'ความสามารถทั่วไปคณิตศาสตร์เเละภาษาไทย.pdf', badge:'ความรู้ทั่วไป', icon:'🧠', category:'ความรู้ความสามารถทั่วไป', files:[{label:'ความสามารถทั่วไปคณิตศาสตร์เเละภาษาไทย', ext:'PDF', href:'#', downloadable:false}] },
-  { title:'แนวข้อสอบวิชา-ความรู้ความสามารถทั่วไป.pdf', badge:'ความรู้ทั่วไป', icon:'🧠', category:'ความรู้ความสามารถทั่วไป', files:[{label:'แนวข้อสอบวิชา-ความรู้ความสามารถทั่วไป', ext:'PDF', href:'#', downloadable:false}] },
+  {
+    title:'ชุดเอกสาร ภาษาไทย · ความสามารถทั่วไป', badge:'ใหม่', icon:'📖', category:'ภาษาไทย',
+    files:[
+      {label:'โวหาร', ext:'PDF', href:'thai/โวหาร.pdf', downloadable:true},
+      {label:'การผันวรรณยุกต์', ext:'PDF', href:'thai/การผันวรรณยุกต์.pdf', downloadable:true},
+      {label:'การสร้างคำ', ext:'PDF', href:'thai/การสร้างคํา.pdf', downloadable:true},
+      {label:'การอ่านจับใจความสำคัญ', ext:'PDF', href:'thai/การอ่านจับใจความสําคัญ.pdf', downloadable:true},
+      {label:'การเขียนสะกดคำ', ext:'PDF', href:'thai/การเขียนสะกดคํา.pdf', downloadable:true},
+      {label:'การเรียงประโยค', ext:'PDF', href:'thai/การเรียงประโยค.pdf', downloadable:true},
+      {label:'ความสามารถทั่วไป คณิตศาสตร์ และภาษาไทย', ext:'PDF', href:'thai/ความสามารถทั่วไปคณิตศาสตร์เเละภาษาไทย.pdf', downloadable:true},
+      {label:'คำราชาศัพท์', ext:'PDF', href:'thai/คําราชาศัพท์.pdf', downloadable:true},
+      {label:'คำเป็น-คำตาย', ext:'PDF', href:'thai/คําเป็น-คําตาย.pdf', downloadable:true},
+      {label:'ชนิดและหน้าที่ของคำ', ext:'PDF', href:'thai/ชนิดและหน้าที่ของคํา.pdf', downloadable:true},
+      {label:'ภาษาฟุ่มเฟือย', ext:'PDF', href:'thai/ภาษาฟุ่มเฟือย.pdf', downloadable:true},
+      {label:'ระเบียบงานสารบรรณ 90 ข้อ', ext:'PDF', href:'thai/ระเบียบงานสารบรรณ 90 ข้อ.pdf', downloadable:true},
+      {label:'วิชาภาษาไทย 1114 ข้อ', ext:'PDF', href:'thai/วิชาภาษาไทย 1114 ข้อ.pdf', downloadable:true},
+      {label:'สำนวนไทย', ext:'PDF', href:'thai/สํานวนไทย.pdf', downloadable:true},
+      {label:'แนวข้อสอบวิชา ความรู้ความสามารถทั่วไป', ext:'PDF', href:'thai/แนวข้อสอบวิชา-ความรู้ความสามารถทั่วไป.pdf', downloadable:true},
+      {label:'แนวข้อสอบวิชา ภาษาไทย', ext:'PDF', href:'thai/แนวข้อสอบวิชา-ภาษาไทย.pdf', downloadable:true},
+      {label:'ไฟล์แถม แนวข้อสอบภาษาไทย', ext:'PDF', href:'thai/ไฟล์แถม แนวข้อสอบภาษาไทย.pdf', downloadable:true}
+    ]
+  }
 ];
