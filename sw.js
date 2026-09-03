@@ -1,5 +1,5 @@
 // sw.js — แคชไฟล์หลักของแอปไว้ใช้งานออฟไลน์หลังโหลดครั้งแรก
-const CACHE_NAME = 'police-prep-cache-v2';
+const CACHE_NAME = 'police-prep-cache-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -31,21 +31,20 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// กลยุทธ์: cache-first สำหรับไฟล์ในแอป, ตกไป network ถ้าไม่เจอในแคช (เช่น Google Fonts ครั้งแรก)
+// กลยุทธ์: network-first — เช็คไฟล์ใหม่จากเน็ตก่อนเสมอถ้ามีสัญญาณ (จะได้ไม่ค้างข้อมูลเก่า
+// เวลาอัปเดตไฟล์บน GitHub) แล้วเก็บสำเนาไว้แทนของเดิม; ถ้าไม่มีเน็ต (ออฟไลน์) ค่อยตกไปใช้
+// สำเนาที่เก็บไว้ในเครื่องแทน — ไม่ต้องเปลี่ยนเลข CACHE_NAME ทุกครั้งที่แก้เนื้อหาอีกต่อไป
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
-            const resClone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
-          }
-          return res;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((res) => {
+        if (res && res.status === 200 && res.type === 'basic') {
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
